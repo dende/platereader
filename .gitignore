@@ -1,0 +1,10 @@
+/venv/
+/.idea/
+dist
+build
+main.spec
+**/*.egg-info
+**/__pycache__
+**/*.pyc
+**/*.pyo
+
