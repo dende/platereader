@@ -141,4 +141,3 @@ def ratio_plot(df, config, wavelengths, control):
     #
     # plt.show()
     #
-

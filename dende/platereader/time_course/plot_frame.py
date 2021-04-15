@@ -158,7 +158,6 @@ class PlotFrame(TabbedFrame):
             headers = xlsx.iloc[13, 2:].copy()
             headers = headers.values
 
-
             for sample in well_mapping:
                 well_mapping[sample] = sorted(well_mapping[sample])
                 i = 0
