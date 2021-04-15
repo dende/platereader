@@ -65,14 +65,11 @@ class WellPlate:
         for i in range(len(self.well_plate.columns) + 2):
             for j in range(len(self.well_plate.index) + 2):
                 character = None
-                if i == 0:
-                    if j > 1:
-                        character = self.well_plate.index[j-2]
-                if j == 0:
-                    if i > 1:
-                        character = self.well_plate.columns[i-2]
-
-                if i > 1 and j > 1:
+                if i == 0 and j > 1:
+                    character = self.well_plate.index[j-2]
+                elif j == 0 and i > 1:
+                    character = self.well_plate.columns[i-2]
+                elif i > 1 and j > 1:
                     pos = f"{self.well_plate.index[j-2]}{self.well_plate.columns[i-2]}"
                     val = self.well_plate[self.well_plate.columns[i-2]][self.well_plate.index[j-2]]
                     if isinstance(val, np.bool_) or isinstance(val, bool):
