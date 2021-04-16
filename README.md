@@ -10,3 +10,7 @@ Currently it supports working with the data generated when using Thermo Scientif
 To work with the data the GUI needs the xlsx files yielded by the microplate reader.
 
 Internally the Application uses tkinter, pandas, matplotlib, openpyxl and their dependencies. Matplotlib is being used in version 3.2.2 in order to allow for easy packaging with Pyinstaller.
+
+## Showcase
+
+<img src="https://raw.githubusercontent.com/dende/platereader/master/doc/samples_screen.webp" width="15%"></img> <img src="https://raw.githubusercontent.com/dende/platereader/master/doc/treatments_screen.webp" width="15%"></img> <img src="https://raw.githubusercontent.com/dende/platereader/master/doc/layout_screen_1.webp" width="15%"></img> <img src="https://raw.githubusercontent.com/dende/platereader/master/doc/layout_screen_2.webp" width="15%"></img> <img src="https://raw.githubusercontent.com/dende/platereader/master/doc/plot_settings_screen.webp" width="15%"></img> <img src="https://raw.githubusercontent.com/dende/platereader/master/doc/example_figure.png" width="22%"></img> 
