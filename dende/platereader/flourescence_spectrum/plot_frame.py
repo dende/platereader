@@ -5,7 +5,7 @@ from tkinter import ttk
 from tkinter.colorchooser import askcolor
 import matplotlib as plt
 
-from dende.platereader.flourescence_spectrum.plot import plot
+from dende.platereader.flourescence_spectrum.plot import SpectrumPlot
 from dende.platereader.layout.tabbed_frame import TabbedFrame
 
 logger = logging.getLogger(__name__)
@@ -59,8 +59,8 @@ class PlotFrame(TabbedFrame):
                 af_checkbox.deselect()
                 self.af_vars[sample] = af_var
                 af_checkbox.grid(row=i, column=2, padx='5', pady='5', )
-            color = self.colors[j]
-            color_button = tk.Button(plot_config_frame, bg=self.colors[j], text=None,
+            color = self.colors[j % len(self.colors)]
+            color_button = tk.Button(plot_config_frame, bg=color, text=None,
                                      command=partial(self.handle_color_button, j, color))
             color_button.grid(row=i, column=3, padx='5', pady='5', )
             self.color_buttons.append(color_button)
@@ -86,22 +86,23 @@ class PlotFrame(TabbedFrame):
         well_mapping = self.well_plate.get_well_mapping(well_dict)
 
         for i, (sample, plot_var) in enumerate(self.plot_vars.items()):
+            color = self.colors[i % len(self.colors)]
             af_var = self.af_vars.get(sample)
             if plot_var.get() == "1":
                 if af_var and af_var.get() == "1":
-                    autofluorescence_plots.append([sample, self.colors[i]])
+                    autofluorescence_plots.append([sample, color])
                     line, treatment = sample.split("$")
                     column_names.extend(
                         [f"{self.settings.control}${treatment}${i}"
                             for i in range(len(well_mapping[f"{self.settings.control}${treatment}"]))])
                 else:
-                    plain_plots.append([sample, self.colors[i]])
+                    plain_plots.append([sample, color])
 
                 column_names.extend([f"{sample}${i}" for i in range(len(well_mapping[sample]))])
 
         plot_data = data[column_names].copy()
-
-        plot(plot_data, plain_plots, autofluorescence_plots, self.settings.control)
+        spectrum_plot = SpectrumPlot(plot_data, plain_plots, autofluorescence_plots, self.settings.control)
+        spectrum_plot.plot()
 
     def get_data(self):
         data = self.well_plate.get_data()
