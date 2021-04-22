@@ -67,7 +67,7 @@ class SpectrumPlot(Plot):
                     elif dr_type == "af":
                         legends.append(f"{line}, corrected for autofluorescence: {dynamic_range:.2f}")
 
-        # todo(dende): dynamic range of autofluorescence corrected sample is note being calculated
+        ax.set_ylabel("Fluorescence Intensity")
         plt.legend(lines, legends, markerscale=2)
         plt.show()
 

@@ -15,13 +15,11 @@ class PlotFrame(TabbedFrame):
     plot_vars = {}
     af_vars = {}
 
-    colors = []
-    labels = ["Samples", "Plot", "Autofluorescence?", "Color"]
-
     def __init__(self, notebook, settings, well_plate):
         super().__init__(notebook, settings, "Plot")
         self.well_plate = well_plate
         # this are only 10 colors, might be a problem in the future
+        self.labels = ["Samples", "Plot", "Autofluorescence?", "Color"]
         self.colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
         self.color_buttons = []
 
@@ -48,20 +46,23 @@ class PlotFrame(TabbedFrame):
             line, treatment = sample.split("$")
             label = ttk.Label(plot_config_frame, text=sample)
             label.grid(row=i, column=0, padx='5', pady='5', sticky='ew')
+
             plot_var = tk.Variable()
             plot_checkbox = tk.Checkbutton(plot_config_frame, variable=plot_var)
             plot_checkbox.select()
             self.plot_vars[sample] = plot_var
             plot_checkbox.grid(row=i, column=1, padx='5', pady='5', )
+
             if self.settings.control and (line != self.settings.control):
                 af_var = tk.Variable()
                 af_checkbox = tk.Checkbutton(plot_config_frame, variable=af_var)
                 af_checkbox.deselect()
                 self.af_vars[sample] = af_var
                 af_checkbox.grid(row=i, column=2, padx='5', pady='5', )
+
             color = self.colors[j % len(self.colors)]
             color_button = tk.Button(plot_config_frame, bg=color, text=None,
-                                     command=partial(self.handle_color_button, j, color))
+                                     command=partial(self.handle_color_button, j))
             color_button.grid(row=i, column=3, padx='5', pady='5', )
             self.color_buttons.append(color_button)
             i = i + 1
@@ -69,7 +70,8 @@ class PlotFrame(TabbedFrame):
         plot_button = ttk.Button(self.frame, text="Plot", command=self.handle_plot_button)
         plot_button.pack(side=tk.BOTTOM, anchor=tk.S, padx=5, pady=5)
 
-    def handle_color_button(self, i, old_color):
+    def handle_color_button(self, i):
+        old_color = self.colors[i % len(self.colors)]
         _, hexcolor = askcolor(old_color)
         self.colors[i % len(self.colors)] = hexcolor
         self.color_buttons[i].configure(bg=hexcolor)

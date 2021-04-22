@@ -1,7 +1,10 @@
 import logging
 import re
 import tkinter as tk
+import matplotlib as plt
+from functools import partial
 from tkinter import ttk
+from tkinter.colorchooser import askcolor
 
 import pandas as pd
 
@@ -12,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 class PlotFrame(TabbedFrame):
-    data = None
     wavelengths = {}
     plot_vars = {}
     af_vars = {}
@@ -22,29 +24,27 @@ class PlotFrame(TabbedFrame):
         super().__init__(notebook, settings, "Plot")
         self.well_plate = well_plate
         self.data = self.get_data()
+        self.labels = ["Samples"]
+        for wavelength in self.wavelengths:
+            self.labels = self.labels + [f"Plot {wavelength}", "Color"]
+        self.labels = self.labels + ["Autofluorescence", "Plot Ratio", "Color"]
+        self.colors = {wavelength: plt.rcParams['axes.prop_cycle'].by_key()['color']
+                       for wavelength in self.wavelengths}
+        self.color_buttons = {wavelength: [] for wavelength in self.wavelengths}
+        self.ratio_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+        self.ratio_color_buttons = []
 
     def draw(self):
 
         plot_config_frame = ttk.Frame(self.frame, width=400)
         plot_config_frame.pack(side=tk.TOP, fill="y", expand=1)
 
-        samples_label = ttk.Label(plot_config_frame, text="Samples")
-        samples_label.grid(row=0, column=0, padx='5', pady='5', sticky='ew')
-        i = 1
-        for wavelength, desc in self.wavelengths.items():
-            plot_label = ttk.Label(plot_config_frame, text=f"Plot {wavelength}?")
-            plot_label.grid(row=0, column=i, padx='5', pady='5', sticky='ew')
-            i = i + 1
-
-        autof_label = ttk.Label(plot_config_frame, text="Autofluorescence?")
-        autof_label.grid(row=0, column=i, padx='5', pady='5', sticky='ew')
-        i = i + 1
-
-        autof_label = ttk.Label(plot_config_frame, text="Plot Ratio")
-        autof_label.grid(row=0, column=i, padx='5', pady='5', sticky='ew')
+        for i, text in enumerate(self.labels):
+            label = ttk.Label(plot_config_frame, text=text)
+            label.grid(row=0, column=i, padx='5', pady='5', sticky='ew')
 
         sep = ttk.Separator(plot_config_frame, orient=tk.HORIZONTAL)
-        sep.grid(row=1, columnspan=i + 1, sticky="ew")
+        sep.grid(row=1, columnspan=len(self.labels), sticky="ew")
 
         i = 2
         self.plot_vars.clear()
@@ -54,7 +54,7 @@ class PlotFrame(TabbedFrame):
         well_dict = self.well_plate.get_well_dict()
         well_mapping = self.well_plate.get_well_mapping(well_dict)
 
-        for sample in sorted(well_mapping.keys()):
+        for k, sample in enumerate(sorted(well_mapping.keys())):
             line, treatment = sample.split("$")
             label = ttk.Label(plot_config_frame, text=sample)
             label.grid(row=i, column=0, padx='5', pady='5', sticky='ew')
@@ -68,63 +68,100 @@ class PlotFrame(TabbedFrame):
                 self.plot_vars[wavelength][sample] = plot_var
                 plot_checkbox.grid(row=i, column=j, padx='5', pady='5')
                 j = j + 1
+                color = self.colors[wavelength][k % len(self.colors[wavelength])]
+                color_button = tk.Button(plot_config_frame, bg=color, text=None,
+                                         command=partial(self.handle_color_button, wavelength, k))
+                color_button.grid(row=i, column=j, padx='5', pady='5', )
+                self.color_buttons[wavelength].append(color_button)
+
+                j = j + 1
             if self.settings.control and (line != self.settings.control):
                 af_var = tk.Variable()
                 af_checkbox = tk.Checkbutton(plot_config_frame, variable=af_var)
                 af_checkbox.deselect()
                 self.af_vars[sample] = af_var
                 af_checkbox.grid(row=i, column=j, padx='5', pady='5', )
-                j = j + 1
+            j = j + 1
 
-                ratio_var = tk.Variable()
-                ratio_checkbox = tk.Checkbutton(plot_config_frame, variable=ratio_var)
-                ratio_checkbox.deselect()
-                self.ratio_vars[sample] = ratio_var
-                ratio_checkbox.grid(row=i, column=j, padx='5', pady='5', )
+            ratio_var = tk.Variable()
+            ratio_checkbox = tk.Checkbutton(plot_config_frame, variable=ratio_var)
+            ratio_checkbox.deselect()
+            self.ratio_vars[sample] = ratio_var
+            ratio_checkbox.grid(row=i, column=j, padx='1', pady='5', )
+
+            j = j + 1
+
+            ratio_color = self.ratio_colors[k % len(self.ratio_colors)]
+            ratio_color_button = tk.Button(plot_config_frame, bg=ratio_color, text=None,
+                                     command=partial(self.handle_ratio_color_button, k))
+            ratio_color_button.grid(row=i, column=j, padx='5', pady='5', )
+            self.ratio_color_buttons.append(ratio_color_button)
 
             i = i + 1
 
         plot_button = ttk.Button(self.frame, text="Plot", command=self.handle_plot_button)
         plot_button.pack(side=tk.BOTTOM, anchor=tk.S, padx=5, pady=5)
 
-    def handle_plot_button(self):
+    def handle_color_button(self, wavelength, i):
+        old_color = self.colors[wavelength][i % len(self.colors[wavelength])]
+        logger.info(self.colors)
+        _, hexcolor = askcolor(old_color)
+        if hexcolor is None:
+            return
+        self.colors[wavelength][i % len(self.colors[wavelength])] = hexcolor
+        self.color_buttons[wavelength][i].configure(bg=hexcolor)
+        logger.info(self.colors)
 
+    def handle_ratio_color_button(self, i):
+        old_ratio_color = self.ratio_colors[i % len(self.ratio_colors)]
+        _, hexcolor = askcolor(old_ratio_color)
+        self.ratio_colors[i % len(self.ratio_colors)] = hexcolor
+        self.ratio_color_buttons[i].configure(bg=hexcolor)
+
+    def handle_plot_button(self):
         column_names = []
         plain_plots = []
         autofluorescence_plots = []
-        ratio_plots = []
+        ratio_plots = {"plain": [], "af": []}
 
         well_dict = self.well_plate.get_well_dict()
         well_mapping = self.well_plate.get_well_mapping(well_dict)
 
         for wavelength, samples in self.plot_vars.items():
-            for sample, plot_var in samples.items():
+            for i, (sample, plot_var) in enumerate(samples.items()):
+                color = self.colors[wavelength][i % len(self.colors[wavelength])]
                 af_var = self.af_vars.get(sample)
                 if plot_var.get() == "1":
                     if af_var and af_var.get() == "1":
-                        autofluorescence_plots.append(f"{wavelength}${sample}")
+                        autofluorescence_plots.append([f"{wavelength}${sample}", color])
                         line, treatment = sample.split("$")
                         column_names.extend([f"{wavelength}${self.settings.control}${treatment}${i}"
                                              for i in range(len(well_mapping[f"{self.settings.control}${treatment}"]))])
                     else:
-                        plain_plots.append(f"{wavelength}${sample}")
+                        plain_plots.append([f"{wavelength}${sample}", color])
 
                     column_names.extend([f"{wavelength}${sample}${i}" for i in range(len(well_mapping[sample]))])
 
-        for sample, ratio_var in self.ratio_vars.items():
+        for i, (sample, ratio_var) in enumerate(self.ratio_vars.items()):
             if ratio_var.get() == "1":
-                ratio_plots.append(sample)
                 line, treatment = sample.split("$")
                 for wavelength in self.wavelengths:
                     column_names.extend([f"{wavelength}${sample}${i}" for i in range(len(well_mapping[sample]))])
-                    column_names.extend([f"{wavelength}${self.settings.control}${treatment}${i}"
-                                         for i in range(len(well_mapping[f"{self.settings.control}${treatment}"]))])
+                af_var = self.af_vars.get(sample)
+                if af_var and af_var.get() == "1":
+                    for wavelength in self.wavelengths:
+                        column_names.extend([f"{wavelength}${self.settings.control}${treatment}${i}"
+                                             for i in range(len(well_mapping[f"{self.settings.control}${treatment}"]))])
+                    ratio_plots["af"].append([sample, self.ratio_colors[i % len(self.ratio_colors)]])
+                else:
+                    ratio_plots["plain"].append([sample, self.ratio_colors[i % len(self.ratio_colors)]])
 
         # remove duplicates
         column_names = list(set(column_names))
-        plot_data = self.data[column_names].copy()
+        data = self.get_data()
+        plot_data = data[column_names].copy()
 
-        if ratio_plots:
+        if ratio_plots["plain"] or ratio_plots["af"]:
             ratio_plot(plot_data, ratio_plots, sorted(self.wavelengths.keys()), self.settings.control)
         elif autofluorescence_plots:
             autofluorescence_plot(plot_data, autofluorescence_plots, self.settings.control)
