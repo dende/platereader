@@ -45,8 +45,8 @@ class SpectrumPlot(Plot):
                 baseline = f"{self.control}${treatment}"
                 self.calc_avg_std_sem(baseline)
                 self.calc_avg_std_sem(sample)
-                self.add_to_dynamic_ranges(sample, af=True)
                 self.df[sample + "-adjusted"] = self.df[sample] - self.df[f"{baseline}"]
+                self.add_to_dynamic_ranges(sample + "-adjusted", af=True)
                 self.df[sample + "-gauss-error"] = (
                                                     self.df[f"{sample}-SEM"] ** 2 +
                                                     self.df[f"{baseline}-SEM"] ** 2
@@ -67,6 +67,7 @@ class SpectrumPlot(Plot):
                     elif dr_type == "af":
                         legends.append(f"{line}, corrected for autofluorescence: {dynamic_range:.2f}")
 
+        # todo(dende): dynamic range of autofluorescence corrected sample is note being calculated
         plt.legend(lines, legends, markerscale=2)
         plt.show()
 
@@ -87,6 +88,7 @@ class SpectrumPlot(Plot):
         treatment_type = None
         if af:
             dr_type = "af"
+            treatment, _ = treatment.split('-')
         if line not in self.ratios[dr_type]:
             self.ratios[dr_type][line] = {}
         if treatment in self.ox_treatments:

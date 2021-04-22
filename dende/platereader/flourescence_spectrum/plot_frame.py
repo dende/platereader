@@ -71,7 +71,7 @@ class PlotFrame(TabbedFrame):
 
     def handle_color_button(self, i, old_color):
         _, hexcolor = askcolor(old_color)
-        self.colors[i] = hexcolor
+        self.colors[i % len(self.colors)] = hexcolor
         self.color_buttons[i].configure(bg=hexcolor)
 
     def handle_plot_button(self):
