@@ -38,7 +38,7 @@ jobs:
         include:
           - os: windows-latest
             TARGET: windows
-            CMD_BUILD: pyinstaller -F -w -n platereader dende\platereader\__main__.py
+            CMD_BUILD: pyinstaller -F -w -n platereader -i platereader.ico dende\platereader\__main__.py
             OUT_FILE_NAME: platereader.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
     steps:
