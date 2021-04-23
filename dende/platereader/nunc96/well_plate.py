@@ -59,8 +59,11 @@ class WellPlate:
         canvas = tk.Canvas(root, width=500, height=360)
         canvas.pack(side=tk.LEFT)
 
-        sample_list = [f"{sample}${treatment}"
-                       for sample in self.settings.samples for treatment in self.settings.treatments]
+        if self.settings.treatments:
+            sample_list = [f"{sample}${treatment}"
+                           for sample in self.settings.samples for treatment in self.settings.treatments]
+        else:
+            sample_list = [f"{sample}" for sample in self.settings.samples]
 
         for i in range(len(self.well_plate.columns) + 2):
             for j in range(len(self.well_plate.index) + 2):
@@ -82,16 +85,22 @@ class WellPlate:
                             character = "x"
                     elif val:
                         sample = val
-                        sample_index = sample_list.index(sample)
-                        color = self.colors[sample_index]
-                        canvas.create_circle(i*35+(35/2), j*35+(35/2), 15, fill=color, outline="black", tags=pos)
+                        try:
+                            sample_index = sample_list.index(sample)
+                            color = self.colors[sample_index]
+                            canvas.create_circle(i*35+(35/2), j*35+(35/2), 15, fill=color, outline="black", tags=pos)
+                        except ValueError:
+                            # we deleted either the corresponding sample or treatment
+                            self.well_plate.iloc[j-2, i-2] = True
+                            canvas.create_circle(i*35+(35/2), j*35+(35/2), 15, fill="white", outline="black", tags=pos)
+
                         canvas.tag_bind(pos, "<Button-1>", partial(self.handle_well_click, j - 2, i - 2))
                 if character:
                     canvas.create_text(i*35+(35/2), j*35+(35/2), fill="black", font="Helvetica 20 bold", text=character)
 
     def handle_well_click(self, row, col, event=None):
-        self.well_plate.iloc[row, col] = self.settings.selected_sample
-        assert self.layout_frame
+        self.well_plate.iloc[row, col] = self.settings.selected_sample if \
+            self.well_plate.iloc[row, col] != self.settings.selected_sample else True
         self.layout_frame.draw()
 
     def get_xlsx(self):

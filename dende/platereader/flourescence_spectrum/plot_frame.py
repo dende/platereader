@@ -43,7 +43,10 @@ class PlotFrame(TabbedFrame):
         well_mapping = self.well_plate.get_well_mapping(well_dict)
 
         for j, sample in enumerate(sorted(well_mapping.keys())):
-            line, treatment = sample.split("$")
+            try:
+                line, treatment = sample.split("$")
+            except ValueError:
+                line, treatment = sample, None
             label = ttk.Label(plot_config_frame, text=sample)
             label.grid(row=i, column=0, padx='5', pady='5', sticky='ew')
 
@@ -93,10 +96,16 @@ class PlotFrame(TabbedFrame):
             if plot_var.get() == "1":
                 if af_var and af_var.get() == "1":
                     autofluorescence_plots.append([sample, color])
-                    line, treatment = sample.split("$")
-                    column_names.extend(
-                        [f"{self.settings.control}${treatment}${i}"
-                            for i in range(len(well_mapping[f"{self.settings.control}${treatment}"]))])
+                    try:
+                        line, treatment = sample.split("$")
+                        column_names.extend(
+                            [f"{self.settings.control}${treatment}${i}"
+                             for i in range(len(well_mapping[f"{self.settings.control}${treatment}"]))])
+                    except ValueError:
+                        column_names.extend(
+                            [f"{self.settings.control}${i}"
+                             for i in range(len(well_mapping[f"{self.settings.control}"]))])
+
                 else:
                     plain_plots.append([sample, color])
 

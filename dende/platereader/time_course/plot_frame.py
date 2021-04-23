@@ -1,11 +1,11 @@
 import logging
 import re
 import tkinter as tk
-import matplotlib as plt
 from functools import partial
 from tkinter import ttk
 from tkinter.colorchooser import askcolor
 
+import matplotlib as plt
 import pandas as pd
 
 from dende.platereader.layout.tabbed_frame import TabbedFrame
@@ -55,7 +55,10 @@ class PlotFrame(TabbedFrame):
         well_mapping = self.well_plate.get_well_mapping(well_dict)
 
         for k, sample in enumerate(sorted(well_mapping.keys())):
-            line, treatment = sample.split("$")
+            try:
+                line, treatment = sample.split("$")
+            except ValueError:
+                line, treatment = sample, None
             label = ttk.Label(plot_config_frame, text=sample)
             label.grid(row=i, column=0, padx='5', pady='5', sticky='ew')
             j = 1
@@ -134,9 +137,18 @@ class PlotFrame(TabbedFrame):
                 if plot_var.get() == "1":
                     if af_var and af_var.get() == "1":
                         autofluorescence_plots.append([f"{wavelength}${sample}", color])
-                        line, treatment = sample.split("$")
-                        column_names.extend([f"{wavelength}${self.settings.control}${treatment}${i}"
-                                             for i in range(len(well_mapping[f"{self.settings.control}${treatment}"]))])
+                        try:
+                            line, treatment = sample.split("$")
+                            column_names.extend([f"{wavelength}${self.settings.control}${treatment}${i}"
+                                                 for i in
+                                                 range(len(well_mapping[f"{self.settings.control}${treatment}"]))])
+
+                        except ValueError:
+                            line, treatment = sample, None
+                            column_names.extend([f"{wavelength}${self.settings.control}${i}"
+                                                 for i in
+                                                 range(len(well_mapping[f"{self.settings.control}"]))])
+
                     else:
                         plain_plots.append([f"{wavelength}${sample}", color])
 
@@ -144,14 +156,21 @@ class PlotFrame(TabbedFrame):
 
         for i, (sample, ratio_var) in enumerate(self.ratio_vars.items()):
             if ratio_var.get() == "1":
-                line, treatment = sample.split("$")
+                try:
+                    line, treatment = sample.split("$")
+                except ValueError:
+                    line, treatment = sample, None
                 for wavelength in self.wavelengths:
                     column_names.extend([f"{wavelength}${sample}${i}" for i in range(len(well_mapping[sample]))])
                 af_var = self.af_vars.get(sample)
                 if af_var and af_var.get() == "1":
                     for wavelength in self.wavelengths:
-                        column_names.extend([f"{wavelength}${self.settings.control}${treatment}${i}"
-                                             for i in range(len(well_mapping[f"{self.settings.control}${treatment}"]))])
+                        if treatment:
+                            column_names.extend([f"{wavelength}${self.settings.control}${treatment}${i}"
+                                                 for i in range(len(well_mapping[f"{self.settings.control}${treatment}"]))])
+                        else:
+                            column_names.extend([f"{wavelength}${self.settings.control}${i}"
+                                                 for i in range(len(well_mapping[f"{self.settings.control}"]))])
                     ratio_plots["af"].append([sample, self.ratio_colors[i % len(self.ratio_colors)]])
                 else:
                     ratio_plots["plain"].append([sample, self.ratio_colors[i % len(self.ratio_colors)]])

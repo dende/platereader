@@ -31,19 +31,32 @@ class SpectrumPlot(Plot):
         legends = []
         ax = None
         for sample, color in self.plain_data:
-            line, treatment = sample.split("$")
+            try:
+                line, treatment = sample.split("$")
+            except ValueError:
+                line, treatment = sample, None
             self.calc_avg_std_sem(sample)
             self.add_to_dynamic_ranges(sample)
             ax = self.plot_lines_with_errorbars(sample, error=f"{sample}-STD", color=color)
             self.plot_dots(sample, color=color, ax=ax)
             lines.append(Line2D([0], [0], color=color))
-            legends.append(f"{line} with {treatment}")
+            if treatment:
+                legends.append(f"{line} with {treatment}")
+            else:
+                legends.append(f"{line}")
 
+        baseline_calculated = False
         if self.autofluorescence_data:
             for sample, color in self.autofluorescence_data:
-                line, treatment = sample.split("$")
-                baseline = f"{self.control}${treatment}"
-                self.calc_avg_std_sem(baseline)
+                try:
+                    line, treatment = sample.split("$")
+                    baseline = f"{self.control}${treatment}"
+                except ValueError:
+                    line, treatment = sample, None
+                    baseline = f"{self.control}"
+                if not baseline_calculated:
+                    self.calc_avg_std_sem(baseline)
+                    baseline_calculated = True
                 self.calc_avg_std_sem(sample)
                 self.df[sample + "-adjusted"] = self.df[sample] - self.df[f"{baseline}"]
                 self.add_to_dynamic_ranges(sample + "-adjusted", af=True)
@@ -54,7 +67,10 @@ class SpectrumPlot(Plot):
                 ax = self.plot_lines_with_errorbars(f"{sample}-adjusted", error=f"{sample}-gauss-error", color=color)
                 self.plot_dots(f"{sample}-adjusted", color=color, ax=ax)
                 lines.append(Line2D([0], [0], color=color))
-                legends.append(f"{line} {treatment}, corrected for autofluorescence")
+                if treatment:
+                    legends.append(f"{line} with {treatment}, corrected for autofluorescence")
+                else:
+                    legends.append(f"{line}, corrected for autofluorescence")
 
         dynamic_ranges = self.calc_dynamic_ranges()
 
@@ -83,7 +99,12 @@ class SpectrumPlot(Plot):
         return dynamic_ranges
 
     def add_to_dynamic_ranges(self, sample, af=False):
-        line, treatment = sample.split("$")
+        try:
+            line, treatment = sample.split("$")
+        except ValueError:
+            line, treatment = sample, None
+        if not treatment:
+            return
         dr_type = "plain"
         treatment_type = None
         if af:

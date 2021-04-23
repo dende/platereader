@@ -1,4 +1,5 @@
 import logging
+from functools import partial
 from tkinter import ttk
 
 from dende.platereader.flourescence_spectrum.plot_frame import PlotFrame
@@ -32,10 +33,10 @@ def init(window, xlsx):
 
     frames = {frame.get_text(): frame for frame in [samples_frame, treatments_frame, layout_frame]}
 
-    notebook.bind('<<NotebookTabChanged>>', lambda event, frames=frames: draw_frame_on_tab_change(event, frames))
+    notebook.bind('<<NotebookTabChanged>>', partial(tab_change, frames))
 
 
-def draw_frame_on_tab_change(event, frames):
+def tab_change(frames, event):
     tab = None
     try:
         tab = event.widget.tab('current')['text']
@@ -48,13 +49,7 @@ def draw_frame_on_tab_change(event, frames):
     if tab == "Layout":
         frames["Samples"].collect_samples()
         frames["Treatments"].collect_treatments()
-        frames.get(tab).draw()
-    elif tab == "Samples":
-        frames["Treatments"].collect_treatments()
-        frames.get(tab).draw()
-    elif tab == "Treatments":
-        frames["Samples"].collect_samples()
-        frames.get(tab).draw()
+        frames["Layout"].draw()
 
 
 def draw_plot_window(notebook, well_plate):

@@ -9,80 +9,48 @@ logger = logging.getLogger(__name__)
 
 
 class SamplesFrame(TabbedFrame):
-    samples = []
+    samples = ["", "", "", "", "", ""]
     control = None
 
     def __init__(self, notebook, settings):
         super().__init__(notebook, settings, "Samples")
+
+        self.sample_name_vars = []  # type: list[tk.StringVar]
+        self.control_vars = []  # type: list[tk.BooleanVar]
+
+        for i, sample in enumerate(self.samples):
+            label = tk.Label(master=self.frame, text=f'Sample {i + 1}')
+            label.grid(row=i, column=0, padx='5', pady='5', sticky='ew')
+
+            text_var = tk.StringVar()
+            self.sample_name_vars.append(text_var)
+            entry = tk.Entry(master=self.frame, bg='white', width='40', textvariable=text_var)
+            text_var.set(sample)
+            entry.grid(row=i, column=1, padx='5', pady='5', sticky='ew')
+
+            control_var = tk.BooleanVar()
+            control_var.set(False)
+            self.control_vars.append(control_var)
+            control_button = ttk.Checkbutton(master=self.frame, text="Control", command=partial(self.toggle_control, i),
+                                             variable=control_var)
+            control_button.grid(row=i, column=2, padx='5', pady='5', )
+
         self.frame.grid_columnconfigure(1, weight=1)
 
-    def draw(self):
-        for widget in self.frame.grid_slaves():
-            widget.grid_forget()
-            widget.destroy()
-
-        if not self.samples:
-            self.samples = [""]
-
-        i = 0
-        for sample in self.samples:
-            label = tk.Label(master=self.frame, text=f'Sample {i + 1}')
-            label.grid(row=i * 2, column=0, padx='5', pady='5', sticky='ew')
-
-            textvar = tk.StringVar()
-            entry = tk.Entry(master=self.frame, bg='white', width='40', textvariable=textvar)
-            textvar.set(sample)
-
-            entry.grid(row=i * 2, column=1, padx='5', pady='5', sticky='ew')
-
-            controlbutton = ttk.Checkbutton(master=self.frame,
-                                            text="Control", command=partial(self.toggle_control, sample))
-            controlbutton.state(["!alternate"])
-            if self.control == sample:
-                controlbutton.state(["selected"])
-            controlbutton.grid(row=i * 2 + 1, column=0, padx='5', pady='5', )
-
-            plus_button = ttk.Button(master=self.frame, text='+', width='2', command=self.add_sample)
-            plus_button.grid(row=i * 2, column=2, padx='5', pady='5')
-            # tk.Button zum Subtrahieren
-            minus_button = ttk.Button(master=self.frame, text='-', width='2', command=partial(self.remove_sample, i))
-            minus_button.grid(row=i * 2 + 1, column=2, padx='5', pady='5')
-            i = i + 1
-
-    def sync(self):
-        self.settings.samples = self.samples
-        self.settings.control = self.control
+    def toggle_control(self, i):
+        for j, control_var in enumerate(self.control_vars):
+            if i != j:
+                control_var.set(False)
 
     def collect_samples(self):
-        i = 0
         self.samples.clear()
-        for widget in self.frame.winfo_children():
-            if widget.winfo_class() == "Entry":
-                i = i + 1
-                sample = widget.get()
-                if sample != "":
-                    self.samples.append(sample)
-        self.sync()
+        self.control = None
+        for i, sample_name_var in enumerate(self.sample_name_vars):
+            sample_name = sample_name_var.get()
+            if sample_name and sample_name != "":
+                self.samples.append(sample_name)
+                if self.control_vars[i].get():
+                    self.control = sample_name
 
-    def add_sample(self):
-        logger.info(f"I'm in SamplesFrame.add_sample, self.samples. {self.samples}")
-        self.collect_samples()
-        self.samples.append("")
-        self.draw()
-
-    def remove_sample(self, i):
-        self.collect_samples()
-        sample = self.samples.pop(i)
-        if self.control == sample:
-            self.control = None
-        self.draw()
-
-    def toggle_control(self, sample):
-        self.collect_samples()
-        logger.info(f"I'm in SamplesFrame.toggle_control, self {self}, {sample}")
-        if self.control == sample:
-            self.control = None
-        else:
-            self.control = sample
-        self.sync()
-        self.draw()
+        self.settings.samples = self.samples
+        self.settings.control = self.control
