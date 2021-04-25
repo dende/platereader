@@ -44,9 +44,9 @@ class PlotFrame(TabbedFrame):
 
         for j, sample in enumerate(sorted(well_mapping.keys())):
             try:
-                line, treatment = sample.split("$")
+                line, _ = sample.split("$")
             except ValueError:
-                line, treatment = sample, None
+                line, _ = sample, None
             label = ttk.Label(plot_config_frame, text=sample)
             label.grid(row=i, column=0, padx='5', pady='5', sticky='ew')
 

@@ -83,7 +83,7 @@ def main():
     except Exception:
         base_path = os.path.abspath(".")
 
-    root.iconbitmap(os.path.join(base_path,'platereader.ico'))
+    root.iconbitmap(os.path.join(base_path, 'platereader.ico'))
 
     open_button = ttk.Button(
         root,

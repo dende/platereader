@@ -56,9 +56,9 @@ class PlotFrame(TabbedFrame):
 
         for k, sample in enumerate(sorted(well_mapping.keys())):
             try:
-                line, treatment = sample.split("$")
+                line, _ = sample.split("$")
             except ValueError:
-                line, treatment = sample, None
+                line, _ = sample, None
             label = ttk.Label(plot_config_frame, text=sample)
             label.grid(row=i, column=0, padx='5', pady='5', sticky='ew')
             j = 1
@@ -96,7 +96,7 @@ class PlotFrame(TabbedFrame):
 
             ratio_color = self.ratio_colors[k % len(self.ratio_colors)]
             ratio_color_button = tk.Button(plot_config_frame, bg=ratio_color, text=None,
-                                     command=partial(self.handle_ratio_color_button, k))
+                                           command=partial(self.handle_ratio_color_button, k))
             ratio_color_button.grid(row=i, column=j, padx='5', pady='5', )
             self.ratio_color_buttons.append(ratio_color_button)
 
@@ -144,7 +144,6 @@ class PlotFrame(TabbedFrame):
                                                  range(len(well_mapping[f"{self.settings.control}${treatment}"]))])
 
                         except ValueError:
-                            line, treatment = sample, None
                             column_names.extend([f"{wavelength}${self.settings.control}${i}"
                                                  for i in
                                                  range(len(well_mapping[f"{self.settings.control}"]))])
@@ -157,9 +156,9 @@ class PlotFrame(TabbedFrame):
         for i, (sample, ratio_var) in enumerate(self.ratio_vars.items()):
             if ratio_var.get() == "1":
                 try:
-                    line, treatment = sample.split("$")
+                    _, treatment = sample.split("$")
                 except ValueError:
-                    line, treatment = sample, None
+                    treatment = None
                 for wavelength in self.wavelengths:
                     column_names.extend([f"{wavelength}${sample}${i}" for i in range(len(well_mapping[sample]))])
                 af_var = self.af_vars.get(sample)
@@ -167,7 +166,8 @@ class PlotFrame(TabbedFrame):
                     for wavelength in self.wavelengths:
                         if treatment:
                             column_names.extend([f"{wavelength}${self.settings.control}${treatment}${i}"
-                                                 for i in range(len(well_mapping[f"{self.settings.control}${treatment}"]))])
+                                                 for i in
+                                                 range(len(well_mapping[f"{self.settings.control}${treatment}"]))])
                         else:
                             column_names.extend([f"{wavelength}${self.settings.control}${i}"
                                                  for i in range(len(well_mapping[f"{self.settings.control}"]))])
