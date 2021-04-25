@@ -101,14 +101,14 @@ def ratio_plot(df, config, wavelengths, control):
         df[f"{sample}-ratio"].plot(figsize=(12, 8), style=['o'], color=color, markersize=4,
                                    ax=ax, grid=True, legend=True)
 
+    for wavelength in wavelengths:
+        baseline_cols = None
+        for sample, color in config["af"]:
+            try:
+                line, treatment = sample.split("$")
+            except ValueError:
+                line, treatment = sample, None
 
-    baseline_cols = None
-    for sample, color in config["af"]:
-        try:
-            line, treatment = sample.split("$")
-        except ValueError:
-            line, treatment = sample, None
-        for wavelength in wavelengths:
             if treatment:
                 wl_sample = f"{wavelength}${line}${treatment}"
                 wl_baseline = f"{wavelength}${control}${treatment}"
@@ -127,6 +127,11 @@ def ratio_plot(df, config, wavelengths, control):
             df[f"{wl_sample}-adjusted"] = df[f"{wl_sample}"] - df[f"{wl_baseline}"]
             df[f"{wl_sample}-gaussian-error"] = (df[f"{wl_sample}-SEM"] ** 2 + df[f"{wl_baseline}-SEM"] ** 2) ** .5
 
+    for sample, color in config["af"]:
+        try:
+            line, treatment = sample.split("$")
+        except ValueError:
+            line, treatment = sample, None
         df[f"{sample}-ratio"] = df[f"{wavelengths[0]}${sample}-adjusted"] / df[f"{wavelengths[1]}${sample}-adjusted"]
         df[f"{sample}-ratio-gaussian-error"] = df[f"{sample}-ratio"] * (
                     (df[f"{wavelengths[0]}${sample}-gaussian-error"] / df[f"{wavelengths[0]}${sample}"]) ** 2 + (
