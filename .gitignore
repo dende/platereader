@@ -1,3 +1,4 @@
+upx-*-win64
 /venv/
 /.idea/
 dist

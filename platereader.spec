@@ -6,7 +6,7 @@ block_cipher = None
 a = Analysis(['dende\\platereader\\__main__.py'],
              pathex=['C:\\Users\\dende\\git\\platereader'],
              binaries=[],
-             datas=[],
+             datas=[('dende/platereader/platereader.ico', '.')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -30,4 +30,4 @@ exe = EXE(pyz,
           upx=True,
           upx_exclude=[],
           runtime_tmpdir=None,
-          console=False , icon='platereader.ico')
+          console=False , icon='dende\\platereader\\platereader.ico')

@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import tkinter as tk
 import typing
 from tkinter import filedialog as fd
@@ -77,6 +78,12 @@ def main():
     root.title('Clariostar analysis')
     root.resizable(False, False)
     root.geometry('300x150')
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    root.iconbitmap(os.path.join(base_path,'platereader.ico'))
 
     open_button = ttk.Button(
         root,
