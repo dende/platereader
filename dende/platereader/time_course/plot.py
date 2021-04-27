@@ -1,5 +1,9 @@
+import logging
+
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+
+logger = logging.getLogger(__name__)
 
 
 def plot(df, config):
@@ -34,7 +38,6 @@ def autofluorescence_plot(df, config, control):
     legends = []
     lines = []
     ax = None
-    baseline_cols = None
     for sample, color in config:  # the variable sample is first WT15, then CytroGFP2Orp1#1 and then SecrroGFP2Orp1#19
         try:
             wavelength, line, treatment = sample.split("$")
@@ -42,7 +45,7 @@ def autofluorescence_plot(df, config, control):
         except ValueError:
             wavelength, line, treatment = sample.split("$") + [None]
             baseline = f"{wavelength}${control}"
-        if not baseline_cols:
+        if baseline not in df.columns:
             baseline_cols = [col for col in df if col.startswith(baseline)]
             df[baseline] = df[baseline_cols].mean(axis=1)  # caluclate the new mean column
             df[baseline + "-STD"] = df[baseline_cols].std(axis=1)
@@ -102,7 +105,6 @@ def ratio_plot(df, config, wavelengths, control):
                                    ax=ax, grid=True, legend=True)
 
     for wavelength in wavelengths:
-        baseline_cols = None
         for sample, color in config["af"]:
             try:
                 line, treatment = sample.split("$")
@@ -115,7 +117,7 @@ def ratio_plot(df, config, wavelengths, control):
             else:
                 wl_sample = f"{wavelength}${line}"
                 wl_baseline = f"{wavelength}${control}"
-            if not baseline_cols:
+            if wl_baseline not in df.columns:
                 baseline_cols = [col for col in df if col.startswith(wl_baseline)]
                 df[f"{wl_baseline}"] = df[baseline_cols].mean(axis=1)  # caluclate the new mean column
                 df[f"{wl_baseline}-STD"] = df[baseline_cols].std(axis=1)
@@ -124,9 +126,12 @@ def ratio_plot(df, config, wavelengths, control):
             df[f"{wl_sample}"] = df[sample_cols].mean(axis=1)  # caluclate the new mean column
             df[f"{wl_sample}-STD"] = df[sample_cols].std(axis=1)
             df[f"{wl_sample}-SEM"] = df[sample_cols].sem(axis=1)
-            df[f"{wl_sample}-adjusted"] = df[f"{wl_sample}"] - df[f"{wl_baseline}"]
-            df[f"{wl_sample}-gaussian-error"] = (df[f"{wl_sample}-SEM"] ** 2 + df[f"{wl_baseline}-SEM"] ** 2) ** .5
-
+            try:
+                df[f"{wl_sample}-adjusted"] = df[f"{wl_sample}"] - df[f"{wl_baseline}"]
+                df[f"{wl_sample}-gaussian-error"] = (df[f"{wl_sample}-SEM"] ** 2 + df[f"{wl_baseline}-SEM"] ** 2) ** .5
+            except KeyError as e:
+                logger.warning(e)
+                pass
     for sample, color in config["af"]:
         try:
             line, treatment = sample.split("$")

@@ -10,6 +10,7 @@ from tkinter.messagebox import showinfo
 import dende.platereader.flourescence_spectrum
 import dende.platereader.protocol_info
 import dende.platereader.time_course
+from dende.platereader import __version__
 
 root = None  # type: typing.Optional[tk.Tk]
 
@@ -75,7 +76,7 @@ def main():
     global root
     # create the root window
     root = tk.Tk()
-    root.title('Clariostar analysis')
+    root.title(f"Clariostar analysis v{__version__}")
     root.resizable(False, False)
     root.geometry('300x150')
     try:
