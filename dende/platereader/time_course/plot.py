@@ -126,12 +126,9 @@ def ratio_plot(df, config, wavelengths, control):
             df[f"{wl_sample}"] = df[sample_cols].mean(axis=1)  # caluclate the new mean column
             df[f"{wl_sample}-STD"] = df[sample_cols].std(axis=1)
             df[f"{wl_sample}-SEM"] = df[sample_cols].sem(axis=1)
-            try:
-                df[f"{wl_sample}-adjusted"] = df[f"{wl_sample}"] - df[f"{wl_baseline}"]
-                df[f"{wl_sample}-gaussian-error"] = (df[f"{wl_sample}-SEM"] ** 2 + df[f"{wl_baseline}-SEM"] ** 2) ** .5
-            except KeyError as e:
-                logger.warning(e)
-                pass
+            df[f"{wl_sample}-adjusted"] = df[f"{wl_sample}"] - df[f"{wl_baseline}"]
+            df[f"{wl_sample}-gaussian-error"] = (df[f"{wl_sample}-SEM"] ** 2 + df[f"{wl_baseline}-SEM"] ** 2) ** .5
+
     for sample, color in config["af"]:
         try:
             line, treatment = sample.split("$")

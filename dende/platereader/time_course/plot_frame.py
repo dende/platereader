@@ -28,10 +28,11 @@ class PlotFrame(TabbedFrame):
         for wavelength in self.wavelengths:
             self.labels = self.labels + [f"Plot {wavelength}", "Color"]
         self.labels = self.labels + ["Autofluorescence", "Plot Ratio", "Color"]
-        self.colors = {wavelength: plt.rcParams['axes.prop_cycle'].by_key()['color']
+        stock_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+        self.colors = {wavelength: stock_colors + stock_colors
                        for wavelength in self.wavelengths}
         self.color_buttons = {wavelength: [] for wavelength in self.wavelengths}
-        self.ratio_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+        self.ratio_colors = stock_colors + stock_colors
         self.ratio_color_buttons = []
 
     def draw(self):
@@ -71,7 +72,7 @@ class PlotFrame(TabbedFrame):
                 self.plot_vars[wavelength][sample] = plot_var
                 plot_checkbox.grid(row=i, column=j, padx='5', pady='5')
                 j = j + 1
-                color = self.colors[wavelength][k % len(self.colors[wavelength])]
+                color = self.colors[wavelength][k]
                 color_button = tk.Button(plot_config_frame, bg=color, text=None,
                                          command=partial(self.handle_color_button, wavelength, k))
                 color_button.grid(row=i, column=j, padx='5', pady='5', )
@@ -94,7 +95,7 @@ class PlotFrame(TabbedFrame):
 
             j = j + 1
 
-            ratio_color = self.ratio_colors[k % len(self.ratio_colors)]
+            ratio_color = self.ratio_colors[k]
             ratio_color_button = tk.Button(plot_config_frame, bg=ratio_color, text=None,
                                            command=partial(self.handle_ratio_color_button, k))
             ratio_color_button.grid(row=i, column=j, padx='5', pady='5', )
@@ -106,19 +107,17 @@ class PlotFrame(TabbedFrame):
         plot_button.pack(side=tk.BOTTOM, anchor=tk.S, padx=5, pady=5)
 
     def handle_color_button(self, wavelength, i):
-        old_color = self.colors[wavelength][i % len(self.colors[wavelength])]
-        logger.info(self.colors)
+        old_color = self.colors[wavelength][i]
         _, hexcolor = askcolor(old_color)
         if hexcolor is None:
             return
-        self.colors[wavelength][i % len(self.colors[wavelength])] = hexcolor
+        self.colors[wavelength][i] = hexcolor
         self.color_buttons[wavelength][i].configure(bg=hexcolor)
-        logger.info(self.colors)
 
     def handle_ratio_color_button(self, i):
-        old_ratio_color = self.ratio_colors[i % len(self.ratio_colors)]
+        old_ratio_color = self.ratio_colors[i]
         _, hexcolor = askcolor(old_ratio_color)
-        self.ratio_colors[i % len(self.ratio_colors)] = hexcolor
+        self.ratio_colors[i] = hexcolor
         self.ratio_color_buttons[i].configure(bg=hexcolor)
 
     def handle_plot_button(self):
@@ -132,7 +131,7 @@ class PlotFrame(TabbedFrame):
 
         for wavelength, samples in self.plot_vars.items():
             for i, (sample, plot_var) in enumerate(samples.items()):
-                color = self.colors[wavelength][i % len(self.colors[wavelength])]
+                color = self.colors[wavelength][i]
                 af_var = self.af_vars.get(sample)
                 if plot_var.get() == "1":
                     if af_var and af_var.get() == "1":
@@ -171,9 +170,9 @@ class PlotFrame(TabbedFrame):
                         else:
                             column_names.extend([f"{wavelength}${self.settings.control}${i}"
                                                  for i in range(len(well_mapping[f"{self.settings.control}"]))])
-                    ratio_plots["af"].append([sample, self.ratio_colors[i % len(self.ratio_colors)]])
+                    ratio_plots["af"].append([sample, self.ratio_colors[i]])
                 else:
-                    ratio_plots["plain"].append([sample, self.ratio_colors[i % len(self.ratio_colors)]])
+                    ratio_plots["plain"].append([sample, self.ratio_colors[i]])
 
         # remove duplicates
         column_names = list(set(column_names))

@@ -53,50 +53,61 @@ class WellPlate:
                     well_mapping[sample_name].append(data_column)
         return well_mapping
 
+    def get_sample_list(self):
+        if self.settings.treatments:
+            sample_list = [f"{sample}${treatment}"
+                           for sample in self.settings.samples for treatment in self.settings.treatments]
+        else:
+            sample_list = [f"{sample}" for sample in self.settings.samples]
+        return sample_list
+
+    def write_on_canvas(self, canvas, i, j, text):
+        canvas.create_text(i * 35 + (35 / 2), j * 35 + (35 / 2), fill="black",
+                           font="Helvetica 20 bold", text=text)
+
+    def add_well(self, canvas, i, j, fill=None, handler=None):
+        tags = f"{i}${j}"
+        canvas.create_circle(i * 35 + (35 / 2), j * 35 + (35 / 2), 15, fill=fill, outline="black", tags=tags)
+        if handler:
+            canvas.tag_bind(tags, "<Button-1>", handler)
+
     def draw(self, root):
         # todo(dende): refactor into smaller parts, cyclomatic complexity is 12
 
         canvas = tk.Canvas(root, width=500, height=360)
         canvas.pack(side=tk.LEFT)
 
-        if self.settings.treatments:
-            sample_list = [f"{sample}${treatment}"
-                           for sample in self.settings.samples for treatment in self.settings.treatments]
-        else:
-            sample_list = [f"{sample}" for sample in self.settings.samples]
+        sample_list = self.get_sample_list()
 
-        for i in range(len(self.well_plate.columns) + 2):
-            for j in range(len(self.well_plate.index) + 2):
-                character = None
-                if i == 0 and j > 1:
-                    character = self.well_plate.index[j-2]
-                elif j == 0 and i > 1:
-                    character = self.well_plate.columns[i-2]
-                elif i > 1 and j > 1:
-                    pos = f"{self.well_plate.index[j-2]}{self.well_plate.columns[i-2]}"
-                    val = self.well_plate[self.well_plate.columns[i-2]][self.well_plate.index[j-2]]
-                    if isinstance(val, np.bool_) or isinstance(val, bool):
-                        if val:
-                            canvas.create_circle(i * 35 + (35/2), j * 35 + (35/2), 15, fill="white", outline="black",
-                                                 tags=pos)
-                            canvas.tag_bind(pos, "<Button-1>", partial(self.handle_well_click, j - 2, i - 2))
-                        else:
-                            canvas.create_circle(i * 35 + (35 / 2), j * 35 + (35 / 2), 15, outline="black")
-                            character = "x"
-                    elif val:
-                        sample = val
-                        try:
-                            sample_index = sample_list.index(sample)
-                            color = self.colors[sample_index]
-                            canvas.create_circle(i*35+(35/2), j*35+(35/2), 15, fill=color, outline="black", tags=pos)
-                        except ValueError:
-                            # we deleted either the corresponding sample or treatment
-                            self.well_plate.iloc[j-2, i-2] = True
-                            canvas.create_circle(i*35+(35/2), j*35+(35/2), 15, fill="white", outline="black", tags=pos)
+        # for i in range(len(self.well_plate.columns) + 2):
+        #     for j in range(len(self.well_plate.index) + 2):
 
-                        canvas.tag_bind(pos, "<Button-1>", partial(self.handle_well_click, j - 2, i - 2))
-                if character:
-                    canvas.create_text(i*35+(35/2), j*35+(35/2), fill="black", font="Helvetica 20 bold", text=character)
+        well_plate = self.well_plate
+        for i, j in [(i, j) for i in range(len(well_plate.columns)+2) for j in range(len(well_plate.index)+2)]:
+            if i == 0 and j > 1:
+                self.write_on_canvas(canvas, i, j, well_plate.index[j - 2])
+            elif j == 0 and i > 1:
+                self.write_on_canvas(canvas, i, j, well_plate.columns[i-2])
+            elif i > 1 and j > 1:
+                well_column = well_plate.columns[i-2]
+                well_row = well_plate.index[j-2]
+                val = well_plate[well_column][well_row]
+                if isinstance(val, np.bool_) or isinstance(val, bool):
+                    if val:
+                        self.add_well(canvas, i, j, fill="white", handler=partial(self.handle_well_click, j-2, i-2))
+                    else:
+                        self.add_well(canvas, i, j)
+                        self.write_on_canvas(canvas, i, j, "x")
+                elif val:
+                    sample = val
+                    try:
+                        sample_index = sample_list.index(sample)
+                        color = self.colors[sample_index]
+                        self.add_well(canvas, i, j, fill=color, handler=partial(self.handle_well_click, j-2, i-2))
+                    except ValueError:
+                        # we deleted either the corresponding sample or treatment
+                        self.well_plate.iloc[j-2, i-2] = True
+                        self.add_well(canvas, i, j, fill=None, handler=partial(self.handle_well_click, j-2, i-2))
 
     def handle_well_click(self, row, col, event=None):
         self.well_plate.iloc[row, col] = self.settings.selected_sample if \

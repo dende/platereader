@@ -20,7 +20,8 @@ class PlotFrame(TabbedFrame):
         self.well_plate = well_plate
         # this are only 10 colors, might be a problem in the future
         self.labels = ["Samples", "Plot", "Autofluorescence?", "Color"]
-        self.colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+        stock_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+        self.colors = stock_colors + stock_colors
         self.color_buttons = []
 
     def draw(self):
@@ -63,7 +64,7 @@ class PlotFrame(TabbedFrame):
                 self.af_vars[sample] = af_var
                 af_checkbox.grid(row=i, column=2, padx='5', pady='5', )
 
-            color = self.colors[j % len(self.colors)]
+            color = self.colors[j]
             color_button = tk.Button(plot_config_frame, bg=color, text=None,
                                      command=partial(self.handle_color_button, j))
             color_button.grid(row=i, column=3, padx='5', pady='5', )
@@ -74,9 +75,9 @@ class PlotFrame(TabbedFrame):
         plot_button.pack(side=tk.BOTTOM, anchor=tk.S, padx=5, pady=5)
 
     def handle_color_button(self, i):
-        old_color = self.colors[i % len(self.colors)]
+        old_color = self.colors[i]
         _, hexcolor = askcolor(old_color)
-        self.colors[i % len(self.colors)] = hexcolor
+        self.colors[i] = hexcolor
         self.color_buttons[i].configure(bg=hexcolor)
 
     def handle_plot_button(self):
@@ -91,7 +92,7 @@ class PlotFrame(TabbedFrame):
         well_mapping = self.well_plate.get_well_mapping(well_dict)
 
         for i, (sample, plot_var) in enumerate(self.plot_vars.items()):
-            color = self.colors[i % len(self.colors)]
+            color = self.colors[i]
             af_var = self.af_vars.get(sample)
             if plot_var.get() == "1":
                 if af_var and af_var.get() == "1":
