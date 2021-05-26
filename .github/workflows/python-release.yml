@@ -49,10 +49,12 @@ jobs:
             TARGET: macos
             CMD_UPX: true
             CMD_BUILD: >
-              pyinstaller -F -w --add-data "dende/platereader/platereader.ico;." -n platereader -i dende/platereader/platereader.ico --noupx dende\platereader\__main__.py &&
+              pyinstaller -F -w --add-data "dende/platereader/platereader.ico:." -n platereader -i dende/platereader/platereader.ico --noupx dende/platereader/__main__.py &&
               cd dist/ &&
-              zip -r9 clipster clipster.app/
-            OUT_FILE_NAME: clipster.zip
+              ls &&
+              find . -maxdepth 3 &&
+              zip -r9 platereader platereader.app/
+            OUT_FILE_NAME: platereader.zip
             ASSET_MIME: application/zip
     steps:
     - uses: actions/checkout@v1
