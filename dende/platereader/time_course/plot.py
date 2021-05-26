@@ -6,8 +6,11 @@ from matplotlib.lines import Line2D
 logger = logging.getLogger(__name__)
 
 
-def plot(df, config):
-
+def plot(df, config, time_in_minutes=True):
+    if time_in_minutes:
+        minutes_index = df.index/60
+        minutes_index.set_names("Time [min]", inplace=True)
+        df.index = minutes_index
     legends = []
     lines = []
     ax = None
@@ -34,7 +37,12 @@ def plot(df, config):
     plt.show()
 
 
-def autofluorescence_plot(df, config, control):
+def autofluorescence_plot(df, config, control, time_in_minutes=True):
+    if time_in_minutes:
+        minutes_index = df.index/60
+        minutes_index.set_names("Time [min]", inplace=True)
+        df.index = minutes_index
+
     legends = []
     lines = []
     ax = None
@@ -71,8 +79,11 @@ def autofluorescence_plot(df, config, control):
     plt.show()
 
 
-def ratio_plot(df, config, wavelengths, control):
-    pass
+def ratio_plot(df, config, wavelengths, control, time_in_minutes=True):
+    if time_in_minutes:
+        minutes_index = df.index/60
+        minutes_index.set_names("Time [min]", inplace=True)
+        df.index = minutes_index
 
     legends = []
     lines = []
