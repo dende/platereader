@@ -9,12 +9,11 @@ logger = logging.getLogger(__name__)
 
 
 class TreatmentsFrame(TabbedFrame):
-    treatments = ["No Treatment", "H202", "DTT"]
-    control = treatments[0]
 
     def __init__(self, notebook, settings):
         super().__init__(notebook, settings, "Treatments")
-
+        self.treatments = settings.treatments
+        self.control = settings.treatment_control
         self.treatment_name_vars = []
         self.control_vars = []  # type: list[tk.BooleanVar]
 

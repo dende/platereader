@@ -7,10 +7,14 @@ from tkinter import filedialog as fd
 from tkinter import ttk
 from tkinter.messagebox import showinfo
 
-import dende.platereader.flourescence_spectrum
+import dende.platereader.analysis
+from dende.platereader.analysis.fluorescence_spectrum import init as fluorescence_spectrum_init
+from dende.platereader.analysis.multichromatic_fluorescence import init as multichromatic_fluorescence_init
+from dende.platereader.analysis.luminescence import init as luminescence_init
+
 import dende.platereader.protocol_info
-import dende.platereader.time_course
 from dende.platereader import __version__
+from dende.platereader.analysis import FLUORESCENCE_SPECTRUM, MULTICHROMATIC_FLUORESCENCE, LUMINESCENCE
 
 root = None  # type: typing.Optional[tk.Tk]
 
@@ -35,9 +39,8 @@ def select_file():
     logger.info(f"opening file: {filename}")
 
     try:
-        proto_info = dende.platereader.get_protocol_information_from_xlsx(filename)
-        dende.platereader.check_protocol_info(proto_info)
-        xlsx = dende.platereader.read_xlsx(filename)
+        data_sheet, proto_info_sheet = dende.platereader.open_xlsx(filename)
+        measurement_settings = dende.platereader.parse_proto_info(proto_info_sheet)
 
     except Exception as e:
         showinfo(
@@ -56,20 +59,24 @@ def select_file():
 
     listbox = tk.Listbox(toprow, width=60)
     i = 0
-    for key, value in proto_info.items():
-        listbox.insert(i, f"{key}: {value}")
-        i = i + 1
+    for attr_name in dir(measurement_settings):
+        if not attr_name.startswith('__'):
+            listbox.insert(i, f"{attr_name}: {getattr(measurement_settings, attr_name)}")
+            i = i + 1
 
     listbox.pack()
 
     bottomrow = ttk.Frame(root)
     bottomrow.pack(expand=1, fill="both")
 
-    if proto_info and proto_info["measurement_type"] == "Fluorescence (FI) spectrum":
-        dende.platereader.flourescence_spectrum.init(bottomrow, xlsx)
+    if measurement_settings and measurement_settings.measurement_type == FLUORESCENCE_SPECTRUM:
+        fluorescence_spectrum_init(bottomrow, data_sheet, proto_info_sheet)
 
-    if proto_info and proto_info["measurement_type"] == "Fluorescence (FI), multichromatic":
-        dende.platereader.time_course.init(bottomrow, xlsx)
+    elif measurement_settings and measurement_settings.measurement_type == MULTICHROMATIC_FLUORESCENCE:
+        multichromatic_fluorescence_init(bottomrow, data_sheet, proto_info_sheet)
+
+    elif measurement_settings and measurement_settings.measurement_type == LUMINESCENCE:
+        luminescence_init(bottomrow, data_sheet, proto_info_sheet, listbox)
 
 
 def main():

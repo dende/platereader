@@ -9,12 +9,11 @@ logger = logging.getLogger(__name__)
 
 
 class SamplesFrame(TabbedFrame):
-    samples = ["", "", "", "", "", ""]
-    control = None
-
     def __init__(self, notebook, settings):
         super().__init__(notebook, settings, "Samples")
 
+        self.samples = settings.samples
+        self.control = settings.control
         self.sample_name_vars = []  # type: list[tk.StringVar]
         self.control_vars = []  # type: list[tk.BooleanVar]
 

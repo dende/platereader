@@ -5,7 +5,7 @@ from tkinter import ttk
 from tkinter.colorchooser import askcolor
 import matplotlib as plt
 
-from dende.platereader.flourescence_spectrum.plot import SpectrumPlot
+from dende.platereader.analysis.fluorescence_spectrum.plot import SpectrumPlot
 from dende.platereader.layout.tabbed_frame import TabbedFrame
 
 logger = logging.getLogger(__name__)

@@ -2,17 +2,16 @@ import logging
 from functools import partial
 from tkinter import ttk
 
-from dende.platereader.layout.layout_frame import LayoutFrame
-from dende.platereader.layout.samples_frame import SamplesFrame
-from dende.platereader.layout.settings import Settings
-from dende.platereader.layout.treatments_frame import TreatmentsFrame
-from dende.platereader.nunc96.well_plate import create_well_plate
-from dende.platereader.time_course.plot_frame import PlotFrame
+from .plot_frame import PlotFrame
+from dende.platereader.layout import LayoutFrame, SamplesFrame, TreatmentsFrame, Settings
+from dende.platereader.plates import create_well_plate
+from .settings import LuminescenceSettings
 
 logger = logging.getLogger(__name__)
 
 
-def init(window, xlsx):
+def init(window, xlsx, proto_info_sheet, listbox):
+    luminescence_settings = LuminescenceSettings(proto_info_sheet)
     root = window
 
     notebook = ttk.Notebook(root)
@@ -23,8 +22,8 @@ def init(window, xlsx):
     samples_frame = SamplesFrame(notebook, settings)
     treatments_frame = TreatmentsFrame(notebook, settings)
     layout_frame = LayoutFrame(notebook, settings, well_plate,
-                               continue_function=lambda notebook=notebook, well_plate=well_plate:
-                               draw_plot_window(notebook, well_plate))
+                               continue_function=lambda n=notebook, w=well_plate, ls=luminescence_settings, lb=listbox:
+                               draw_plot_window(n, w, ls, lb))
 
     samples_frame.draw()
     treatments_frame.draw()
@@ -58,8 +57,8 @@ def tab_change(frames, event):
         frames.get(tab).draw()
 
 
-def draw_plot_window(notebook, well_plate):
+def draw_plot_window(notebook, well_plate, luminescence_settings, listbox):
     for widget in notebook.winfo_children():
         widget.destroy()
-    plot_frame = PlotFrame(notebook, well_plate.settings, well_plate)
+    plot_frame = PlotFrame(notebook, well_plate.settings, well_plate, luminescence_settings, listbox)
     plot_frame.draw()

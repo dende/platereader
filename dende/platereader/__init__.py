@@ -1,4 +1,3 @@
-from .protocol_info import get_protocol_information_from_xlsx, check_protocol_info, read_xlsx  # noqa
-from .plot import Plot  # noqa
+from .protocol_info import open_xlsx, parse_proto_info  # noqa
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

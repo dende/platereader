@@ -9,7 +9,7 @@ import matplotlib as plt
 import pandas as pd
 
 from dende.platereader.layout.tabbed_frame import TabbedFrame
-from dende.platereader.time_course.plot import plot, autofluorescence_plot, ratio_plot
+from dende.platereader.analysis.multichromatic_fluorescence.plot import plot, autofluorescence_plot, ratio_plot
 
 logger = logging.getLogger(__name__)
 

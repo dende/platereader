@@ -2,50 +2,50 @@ import logging
 
 import pandas as pandas
 
+from dende.platereader.plates import WELL_PLATE_TYPES
+
 logger = logging.getLogger(__name__)
 
-measurement_types = ["Fluorescence (FI) spectrum", "Fluorescence (FI), multichromatic"]
+
+class ProtocolInfo:
+
+    def __init__(self, proto_info_sheet):
+        self.test_id = remove_prefix(proto_info_sheet[0][2], "Test ID: ")
+        self.test_name = remove_prefix(proto_info_sheet[0][3], "Test Name: ")
+        self.date = remove_prefix(proto_info_sheet[0][4], "Date: ")
+        self.time = remove_prefix(proto_info_sheet[0][5], "Time: ")
+        self.name = remove_prefix(proto_info_sheet[0][6], "ID1: ")
+        self.username = remove_prefix(proto_info_sheet[0][7], "ID2: ")
+        self.analysis_type = proto_info_sheet[0][8]
+        self.measurement_type = proto_info_sheet[1][13]
+        self.microplate_name = proto_info_sheet[1][14]
+
+        if self.microplate_name not in WELL_PLATE_TYPES:
+            raise(Exception(f"Unknown measurement type: {self.microplate_name}"))
+
+
+def remove_prefix(text, prefix):
+    if text.startswith(prefix):
+        return text[len(prefix):]
+    return text
 
 
 def read_xlsx(path):
     return pandas.read_excel(path, sheet_name=0, header=None)
 
 
-def get_protocol_information_from_xlsx(path):
+def open_xlsx(path):
     xlsx = pandas.read_excel(path, sheet_name=None, header=None)
-    protocol_information = xlsx["Protocol Information"]
+    proto_info_sheet = xlsx["Protocol Information"]
+    for sheet_name, sheet in xlsx.items():
+        if sheet_name.startswith("Row"):
+            return sheet, proto_info_sheet
 
-    proto_info = {
-        "test_id": remove_prefix(protocol_information[0][2], "Test ID: "),
-        "test_name": remove_prefix(protocol_information[0][3], "Test Name: "),
-        "date": remove_prefix(protocol_information[0][4], "Date: "),
-        "time": remove_prefix(protocol_information[0][5], "Time: "),
-        "name": remove_prefix(protocol_information[0][6], "ID1: "),
-        "username": remove_prefix(protocol_information[0][7], "ID2: "),
-        "analysis_type": protocol_information[0][8],
-        "measurement_type": protocol_information[1][13],
-        "microplate_name": protocol_information[1][14],
-    }
-
-    return proto_info
+    raise Exception("No Sheet with data found. Should start with \"Row X - Row Y\"")
 
 
-def check_protocol_info(proto_info):
-    microplate_names = ["NUNC 96"]
+def parse_proto_info(proto_info_sheet):
 
-    if proto_info["analysis_type"] != proto_info["measurement_type"]:
-        logger.error(f"analysis_type: {proto_info['analysis_type']},"
-                     f" measurement_type: {proto_info['measurement_type']}")
-        raise Exception("analysis type and measurement type specified in the protocol info do not match")
+    protocol_info = ProtocolInfo(proto_info_sheet)
 
-    if proto_info["microplate_name"] not in microplate_names:
-        raise Exception(f"Unknown microplate type: {proto_info['microplate_name']}")
-
-    if proto_info["measurement_type"] not in measurement_types:
-        raise Exception(f"Unknown measurement type: {proto_info['measurement_type']}")
-
-
-def remove_prefix(text, prefix):
-    if text.startswith(prefix):
-        return text[len(prefix):]
-    return text  # or whatever
+    return protocol_info

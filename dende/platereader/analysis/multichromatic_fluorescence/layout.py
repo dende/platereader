@@ -2,23 +2,22 @@ import logging
 from functools import partial
 from tkinter import ttk
 
-from dende.platereader.flourescence_spectrum.plot_frame import PlotFrame
-from dende.platereader.layout.layout_frame import LayoutFrame
-from dende.platereader.layout.samples_frame import SamplesFrame
-from dende.platereader.layout.settings import Settings
-from dende.platereader.layout.treatments_frame import TreatmentsFrame
-from dende.platereader.nunc96.well_plate import create_well_plate
+from .plot_frame import PlotFrame
+from dende.platereader.layout import LayoutFrame, SamplesFrame, TreatmentsFrame, Settings
+from dende.platereader.plates import create_well_plate
+# from .settings import MultichromaticFluorescenceSettings
 
 logger = logging.getLogger(__name__)
 
 
-def init(window, xlsx):
-    root = window
+def init(root, data_sheet, proto_info_sheet):
+    # multichromatic_fluorescence_settings = MultichromaticFluorescenceSettings(proto_info_sheet)
 
     notebook = ttk.Notebook(root)
-    settings = Settings()
+    treatments = ["No Treatment", "H202", "DTT"]
+    settings = Settings(treatments=treatments, treatment_control=treatments[0])
 
-    well_plate = create_well_plate(xlsx, settings)
+    well_plate = create_well_plate(data_sheet, settings)
 
     samples_frame = SamplesFrame(notebook, settings)
     treatments_frame = TreatmentsFrame(notebook, settings)
@@ -49,7 +48,13 @@ def tab_change(frames, event):
     if tab == "Layout":
         frames["Samples"].collect_samples()
         frames["Treatments"].collect_treatments()
-        frames["Layout"].draw()
+        frames.get(tab).draw()
+    elif tab == "Samples":
+        frames["Treatments"].collect_treatments()
+        frames.get(tab).draw()
+    elif tab == "Treatments":
+        frames["Samples"].collect_samples()
+        frames.get(tab).draw()
 
 
 def draw_plot_window(notebook, well_plate):

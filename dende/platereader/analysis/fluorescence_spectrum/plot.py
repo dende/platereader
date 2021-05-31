@@ -3,15 +3,15 @@ import logging
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
-from dende.platereader import Plot
 
 logger = logging.getLogger(__name__)
 
 
-class SpectrumPlot(Plot):
+class SpectrumPlot:
 
     def __init__(self, df, plain_data, autofluorescence_data=None, control=None, title=None):
-        super().__init__(df)
+        self.df = df
+        self.figsize = (12, 8)
         self.plain_data = plain_data
         self.autofluorescence_data = autofluorescence_data
         self.control = control
@@ -19,6 +19,14 @@ class SpectrumPlot(Plot):
         self.ox_treatments = ["H202"]
         self.red_treatmens = ["DTT", "DPS"]
         self.ratios = {"plain": {}, "af": {}}
+
+    def plot_lines_with_errorbars(self, sample, error, color):
+        return self.df[sample].plot(figsize=self.figsize, yerr=self.df[error], alpha=0.4, legend=False,
+                                    grid=True, color=color)
+
+    def plot_dots(self, sample, color, ax):
+        return self.df[sample].plot(figsize=self.figsize, style=['o'], color=color, markersize=4,
+                                    ax=ax, grid=True, legend=True)
 
     def calc_avg_std_sem(self, col_name):
         col_names = [col for col in self.df if col.startswith(col_name)]
