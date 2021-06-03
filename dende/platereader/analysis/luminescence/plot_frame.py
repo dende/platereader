@@ -51,6 +51,8 @@ class PlotFrame(TabbedFrame):
         self.colors = pd.DataFrame(index=self.samples, columns=self.presets)
         self.color_buttons = pd.DataFrame(index=self.samples, columns=self.presets)
 
+        self.time_unit = tk.StringVar(value="Seconds")
+
         for sample in self.samples:
             self.colors.loc[sample, :] = [next(colorcycle) for _ in range(self.colors.shape[1])]
             for preset in self.presets:
@@ -94,6 +96,9 @@ class PlotFrame(TabbedFrame):
 
         plot_button = ttk.Button(self.frame, text="Plot", command=self.handle_plot_button)
         plot_button.pack(side=tk.BOTTOM, anchor=tk.S, padx=5, pady=5)
+        for unit in ["Seconds", "Minutes"]:
+            unit_button = ttk.Radiobutton(self.frame, text=unit, variable=self.time_unit, value=unit)
+            unit_button.pack(side=tk.BOTTOM, anchor=tk.S)
 
     def handle_color_button(self, sample, preset):
         old_color = self.colors.loc[sample, preset]
@@ -123,7 +128,7 @@ class PlotFrame(TabbedFrame):
 
         column_names = sorted(list(set(column_names)))
         plot_data = self.data[column_names].copy()
-        luminescence_plot = LuminescencePlot(plot_data, self.luminescence_settings.optic_settings.presets, plain_plots,
+        luminescence_plot = LuminescencePlot(plot_data, self.time_unit.get(), self.luminescence_settings.optic_settings.presets, plain_plots,
                                              diff_plots)
         luminescence_plot.plot()
 

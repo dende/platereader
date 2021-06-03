@@ -15,7 +15,7 @@ def init(window, xlsx, proto_info_sheet, listbox):
     root = window
 
     notebook = ttk.Notebook(root)
-    settings = Settings()
+    settings = Settings(treatments=["", "", "", "", ""])
 
     well_plate = create_well_plate(xlsx, settings)
 

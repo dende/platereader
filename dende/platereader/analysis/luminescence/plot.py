@@ -9,8 +9,16 @@ logger = logging.getLogger(__name__)
 
 class LuminescencePlot:
 
-    def __init__(self, df, presets, plain_data, diff_data=None, title=None):
+    def __init__(self, df, time_unit, presets, plain_data, diff_data=None, title=None):
         self.df = df
+        if time_unit not in ["Seconds", "Minutes"]:
+            raise(Exception(f"Unknown time unit: {time_unit}"))
+        self.time_unit = time_unit
+        if self.time_unit == "Minutes":
+            minutes_index = self.df.index / 60
+            minutes_index.set_names("Time [min]", inplace=True)
+            self.df.index = minutes_index
+
         self.presets = presets
         self.figsize = (12, 8)
         self.plain_data = plain_data
@@ -78,5 +86,6 @@ class LuminescencePlot:
             else:
                 legends.append(f"{line} corrected with filter")
 
+        ax.set_ylabel("Luminescence Intensity")
         plt.legend(lines, legends)
         plt.show()
