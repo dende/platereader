@@ -78,7 +78,12 @@ class LuminescencePlot:
             self.calc_avg_std_sem(f"{p1}${sample}")
             self.calc_avg_std_sem(f"{p2}${sample}")
             self.df[f"{p1}-{p2}"] = self.df[f"{p1}${sample}"] - self.df[f"{p2}${sample}"]
-            ax = self.plot_lines_with_errorbars(f"{p1}-{p2}", error=None, color=color, ax=ax)
+            self.df[f"{p1}-{p2}-gauss-error"] = (
+                                                       self.df[f"{p1}${sample}-SEM"] ** 2 +
+                                                       self.df[f"{p2}${sample}-SEM"] ** 2
+                                               ) ** .5
+
+            ax = self.plot_lines_with_errorbars(f"{p1}-{p2}", error=f"{p1}-{p2}-gauss-error", color=color, ax=ax)
             self.plot_dots(f"{p1}-{p2}", color=color, ax=ax)
             lines.append(Line2D([0], [0], color=color))
             if treatment:
