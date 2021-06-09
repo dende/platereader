@@ -9,7 +9,6 @@ import pandas as pd
 from itertools import cycle
 
 from dende.platereader.analysis.luminescence.plot import LuminescencePlot
-from dende.platereader.analysis.luminescence.settings import LuminescenceSettings
 from dende.platereader.layout.tabbed_frame import TabbedFrame
 
 logger = logging.getLogger(__name__)
@@ -19,14 +18,13 @@ class PlotFrame(TabbedFrame):
     filter_settings = {}
     data = None
 
-    def __init__(self, notebook, settings, well_plate, luminescence_settings: LuminescenceSettings, listbox):
+    def __init__(self, notebook, settings, well_plate, proto_info, listbox):
         super().__init__(notebook, settings, "Plot")
         self.well_plate = well_plate
-        self.well_dict = self.well_plate.get_well_dict()
-        self.well_mapping = self.well_plate.get_well_mapping(self.well_dict)
+        self.well_mapping = self.well_plate.get_well_mapping()
         self.samples = sorted(self.well_mapping.keys())
-        self.luminescence_settings = luminescence_settings
-        self.presets = list(luminescence_settings.optic_settings.presets.keys())
+        self.luminescence_settings = proto_info.settings
+        self.presets = [f"{preset}" for preset in self.luminescence_settings.optic_settings.presets.values()]
         colorcycle = cycle(plt.rcParams['axes.prop_cycle'].by_key()['color'])
 
         listbox.delete(0, tk.END)
@@ -45,7 +43,7 @@ class PlotFrame(TabbedFrame):
             no_filter_key, no_filter_setting = self.luminescence_settings.optic_settings.get_no_filter_setting()
             self.labels.append(f"Plot preset {no_filter_key} - preset {filter_key}")
             self.labels.append("Color")
-            self.presets.append(f"{no_filter_key}-{filter_key}")
+            self.presets.append(f"{no_filter_setting}|{filter_setting}")
 
         self.plot_vars = pd.DataFrame(index=self.samples, columns=self.presets)
         self.colors = pd.DataFrame(index=self.samples, columns=self.presets)
@@ -57,8 +55,6 @@ class PlotFrame(TabbedFrame):
             self.colors.loc[sample, :] = [next(colorcycle) for _ in range(self.colors.shape[1])]
             for preset in self.presets:
                 self.plot_vars.loc[sample, preset] = tk.Variable()
-
-        self.parse_data()
 
     def draw(self):
 
@@ -108,7 +104,6 @@ class PlotFrame(TabbedFrame):
 
     def handle_plot_button(self):
 
-        column_names = []
         plain_plots = []
         diff_plots = []
 
@@ -118,56 +113,12 @@ class PlotFrame(TabbedFrame):
                 plot_var = self.plot_vars.loc[sample, preset]
                 if plot_var.get() == "1":
                     try:
-                        p1, p2 = preset.split("-")
-                        column_names.extend([f"{p1}${sample}${i}" for i in range(len(self.well_mapping[sample]))])
-                        column_names.extend([f"{p2}${sample}${i}" for i in range(len(self.well_mapping[sample]))])
+                        p1, p2 = preset.split("|")
                         diff_plots.append([p1, p2, sample, color])
                     except (ValueError, AttributeError):
-                        column_names.extend([f"{preset}${sample}${i}" for i in range(len(self.well_mapping[sample]))])
                         plain_plots.append([preset, sample, color])
 
-        column_names = sorted(list(set(column_names)))
-        plot_data = self.data[column_names].copy()
+        plot_data = self.well_plate.get_merged_data()
         luminescence_plot = LuminescencePlot(plot_data, self.time_unit.get(), self.luminescence_settings.optic_settings.presets, plain_plots,
                                              diff_plots)
         luminescence_plot.plot()
-
-    def parse_data(self):
-        xlsx = self.well_plate.get_xlsx()
-        descs = xlsx.iloc[14:, 0].unique()
-
-        pattern = r"^\s?Raw Data \(((?P<no_filter>No filter)|(?P<filter>\d+-\d+)) (?P<setting_number>\d+)\)$"
-        regex = re.compile(pattern)
-
-        well_dict = self.well_plate.get_well_dict()
-        well_mapping = self.well_plate.get_well_mapping(well_dict)
-
-        filter_datas = []
-
-        for desc in descs:
-            # todo(dende): I'm sure there is a better way. but python regex is weird
-            match = [m.groupdict() for m in regex.finditer(desc)][0]
-            setting_number = match["setting_number"]
-
-            mask = xlsx.iloc[:, 0].str.contains(desc.strip(), regex=False, na=False)
-            filter_data = xlsx[mask].copy()
-            filter_data.columns = xlsx.iloc[13].copy()
-            filter_data = filter_data.iloc[:, 1:]
-            filter_data = filter_data.set_index(filter_data.columns[0])
-            # column names are not mutable anymore once it belongs to df.columns so lets keep a mutable copy.
-            # yes, i know this is shit code
-            headers = xlsx.iloc[13, 2:].copy()
-            headers = headers.values
-
-            for sample in well_mapping:
-                well_mapping[sample] = sorted(well_mapping[sample])
-                i = 0
-                for col in well_mapping[sample]:
-                    headers[col] = f"{setting_number}${sample}${i}"
-                    i = i + 1
-            filter_data.columns = headers
-            filter_datas.append(filter_data.copy())
-
-        data = pd.concat(filter_datas, axis=1)
-        data = data.loc[:, ~data.columns.str.startswith('Sample ')]
-        self.data = data

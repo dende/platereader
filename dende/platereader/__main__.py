@@ -1,5 +1,6 @@
 import logging
 import os
+import pathlib
 import sys
 import tkinter as tk
 import typing
@@ -8,13 +9,12 @@ from tkinter import ttk
 from tkinter.messagebox import showinfo
 
 import dende.platereader.analysis
-from dende.platereader.analysis.fluorescence_spectrum import init as fluorescence_spectrum_init
-from dende.platereader.analysis.multichromatic_fluorescence import init as multichromatic_fluorescence_init
-from dende.platereader.analysis.luminescence import init as luminescence_init
-
 import dende.platereader.protocol_info
 from dende.platereader import __version__
 from dende.platereader.analysis import FLUORESCENCE_SPECTRUM, MULTICHROMATIC_FLUORESCENCE, LUMINESCENCE
+from dende.platereader.analysis.fluorescence_spectrum import init as fluorescence_spectrum_init
+from dende.platereader.analysis.luminescence import init as luminescence_init
+from dende.platereader.analysis.multichromatic_fluorescence import init as multichromatic_fluorescence_init
 
 root = None  # type: typing.Optional[tk.Tk]
 
@@ -28,7 +28,7 @@ logger = logging.getLogger()
 def select_file():
     global root
     filetypes = (
-        ('Clariostar plate reader results', '*.xlsx'),
+        ('Clariostar plate reader results', '*.xlsx *.txt'),
     )
 
     filename = fd.askopenfilename(
@@ -36,11 +36,13 @@ def select_file():
         initialdir=os.getcwd(),
         filetypes=filetypes)
 
+    if not filename:
+        return
+
     logger.info(f"opening file: {filename}")
 
     try:
-        data_sheet, proto_info_sheet = dende.platereader.open_xlsx(filename)
-        measurement_settings = dende.platereader.parse_proto_info(proto_info_sheet)
+        data, proto_info = dende.platereader.open_file(filename)
 
     except Exception as e:
         showinfo(
@@ -59,9 +61,9 @@ def select_file():
 
     listbox = tk.Listbox(toprow, width=60)
     i = 0
-    for attr_name in dir(measurement_settings):
+    for attr_name in dir(proto_info):
         if not attr_name.startswith('__'):
-            listbox.insert(i, f"{attr_name}: {getattr(measurement_settings, attr_name)}")
+            listbox.insert(i, f"{attr_name}: {getattr(proto_info, attr_name)}")
             i = i + 1
 
     listbox.pack()
@@ -69,14 +71,14 @@ def select_file():
     bottomrow = ttk.Frame(root)
     bottomrow.pack(expand=1, fill="both")
 
-    if measurement_settings and measurement_settings.measurement_type == FLUORESCENCE_SPECTRUM:
-        fluorescence_spectrum_init(bottomrow, data_sheet, proto_info_sheet)
+    if proto_info and proto_info.measurement_type == FLUORESCENCE_SPECTRUM:
+        fluorescence_spectrum_init(bottomrow, data, proto_info)
 
-    elif measurement_settings and measurement_settings.measurement_type == MULTICHROMATIC_FLUORESCENCE:
-        multichromatic_fluorescence_init(bottomrow, data_sheet, proto_info_sheet)
+    elif proto_info and proto_info.measurement_type == MULTICHROMATIC_FLUORESCENCE:
+        multichromatic_fluorescence_init(bottomrow, data, proto_info)
 
-    elif measurement_settings and measurement_settings.measurement_type == LUMINESCENCE:
-        luminescence_init(bottomrow, data_sheet, proto_info_sheet, listbox)
+    elif proto_info and proto_info.measurement_type == LUMINESCENCE:
+        luminescence_init(bottomrow, data, proto_info, listbox)
 
 
 def main():
@@ -89,7 +91,7 @@ def main():
     try:
         base_path = sys._MEIPASS
     except Exception:
-        base_path = os.path.abspath(".")
+        base_path = pathlib.Path(__file__).parent.absolute()
 
     root.iconbitmap(os.path.join(base_path, 'platereader.ico'))
 

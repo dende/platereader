@@ -3,21 +3,19 @@ from functools import partial
 from tkinter import ttk
 
 from .plot_frame import PlotFrame
-# from .settings import FluorescenceSpectrumSettings
 from dende.platereader.layout import LayoutFrame, SamplesFrame, TreatmentsFrame, Settings
 from dende.platereader.plates import create_well_plate
 
 logger = logging.getLogger(__name__)
 
 
-def init(root, data_sheet, proto_info_sheet):
+def init(root, data, proto_info):
 
-    # fluorescence_spectrum_settings = FluorescenceSpectrumSettings(proto_info_sheet)
     notebook = ttk.Notebook(root)
     treatments = ["No Treatment", "H202", "DTT"]
     settings = Settings(treatments=treatments, treatment_control=treatments[0])
 
-    well_plate = create_well_plate(data_sheet, settings)
+    well_plate = create_well_plate(data, proto_info, settings)
 
     samples_frame = SamplesFrame(notebook, settings)
     treatments_frame = TreatmentsFrame(notebook, settings)

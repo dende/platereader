@@ -40,8 +40,7 @@ class PlotFrame(TabbedFrame):
         self.plot_vars.clear()
         self.af_vars.clear()
 
-        well_dict = self.well_plate.get_well_dict()
-        well_mapping = self.well_plate.get_well_mapping(well_dict)
+        well_mapping = self.well_plate.get_well_mapping()
 
         for j, sample in enumerate(sorted(well_mapping.keys())):
             try:
@@ -82,14 +81,15 @@ class PlotFrame(TabbedFrame):
 
     def handle_plot_button(self):
 
-        data = self.get_data()
+        data = self.well_plate.get_named_data()
+        data = data[list(data.keys())[0]]  # in flourescence spectrum data there is usually just one lens setting?
+        # todo: maybe abstract the settings and always offer to plot all of them
 
         column_names = []
         plain_plots = []
         autofluorescence_plots = []
 
-        well_dict = self.well_plate.get_well_dict()
-        well_mapping = self.well_plate.get_well_mapping(well_dict)
+        well_mapping = self.well_plate.get_well_mapping()
 
         for i, (sample, plot_var) in enumerate(self.plot_vars.items()):
             color = self.colors[i]
@@ -100,34 +100,18 @@ class PlotFrame(TabbedFrame):
                     try:
                         line, treatment = sample.split("$")
                         column_names.extend(
-                            [f"{self.settings.control}${treatment}${i}"
+                            [f"{self.settings.control}${treatment}§{i}"
                              for i in range(len(well_mapping[f"{self.settings.control}${treatment}"]))])
                     except ValueError:
                         column_names.extend(
-                            [f"{self.settings.control}${i}"
+                            [f"{self.settings.control}§{i}"
                              for i in range(len(well_mapping[f"{self.settings.control}"]))])
 
                 else:
                     plain_plots.append([sample, color])
 
-                column_names.extend([f"{sample}${i}" for i in range(len(well_mapping[sample]))])
+                column_names.extend([f"{sample}§{i}" for i in range(len(well_mapping[sample]))])
 
         plot_data = data[column_names].copy()
         spectrum_plot = SpectrumPlot(plot_data, plain_plots, autofluorescence_plots, self.settings.control)
         spectrum_plot.plot()
-
-    def get_data(self):
-        data = self.well_plate.get_data()
-        well_dict = self.well_plate.get_well_dict()
-        well_mapping = self.well_plate.get_well_mapping(well_dict)
-
-        for sample in well_mapping:
-            well_mapping[sample] = sorted(well_mapping[sample])
-            i = 0
-            for col in well_mapping[sample]:
-                data.iloc[0, col+1] = f"{sample}${i}"
-                i = i + 1
-
-        data = data.rename(columns=data.iloc[0]).drop(data.index[0])
-        data = data.set_index(data.columns[0])
-        return data.copy()

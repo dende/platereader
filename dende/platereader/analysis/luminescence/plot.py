@@ -53,16 +53,15 @@ class LuminescencePlot:
         lines = []
         legends = []
         ax = None
-        for preset_number, sample, color in self.plain_data:
-            preset = self.presets[preset_number]
+        for preset, sample, color in self.plain_data:
             try:
                 line, treatment = sample.split("$")
             except ValueError:
                 line, treatment = sample, None
-            self.calc_avg_std_sem(f"{preset_number}${sample}")
-            ax = self.plot_lines_with_errorbars(f"{preset_number}${sample}",
-                                                error=f"{preset_number}${sample}-STD", color=color)
-            self.plot_dots(f"{preset_number}${sample}", color=color, ax=ax)
+            self.calc_avg_std_sem(f"{preset}!{sample}")
+            ax = self.plot_lines_with_errorbars(f"{preset}!{sample}",
+                                                error=f"{preset}!{sample}-STD", color=color)
+            self.plot_dots(f"{preset}!{sample}", color=color, ax=ax)
             lines.append(Line2D([0], [0], color=color))
             if treatment:
                 legends.append(f"{line} with {treatment} and {preset}")
@@ -75,16 +74,16 @@ class LuminescencePlot:
             except ValueError:
                 line, treatment = sample, None
 
-            self.calc_avg_std_sem(f"{p1}${sample}")
-            self.calc_avg_std_sem(f"{p2}${sample}")
-            self.df[f"{p1}-{p2}"] = self.df[f"{p1}${sample}"] - self.df[f"{p2}${sample}"]
-            self.df[f"{p1}-{p2}-gauss-error"] = (
-                                                       self.df[f"{p1}${sample}-SEM"] ** 2 +
-                                                       self.df[f"{p2}${sample}-SEM"] ** 2
+            self.calc_avg_std_sem(f"{p1}!{sample}")
+            self.calc_avg_std_sem(f"{p2}!{sample}")
+            self.df[f"{p1}!{p2}"] = self.df[f"{p1}!{sample}"] - self.df[f"{p2}!{sample}"]
+            self.df[f"{p1}!{p2}-gauss-error"] = (
+                                                       self.df[f"{p1}!{sample}-SEM"] ** 2 +
+                                                       self.df[f"{p2}!{sample}-SEM"] ** 2
                                                ) ** .5
 
-            ax = self.plot_lines_with_errorbars(f"{p1}-{p2}", error=f"{p1}-{p2}-gauss-error", color=color, ax=ax)
-            self.plot_dots(f"{p1}-{p2}", color=color, ax=ax)
+            ax = self.plot_lines_with_errorbars(f"{p1}!{p2}", error=f"{p1}!{p2}-gauss-error", color=color, ax=ax)
+            self.plot_dots(f"{p1}!{p2}", color=color, ax=ax)
             lines.append(Line2D([0], [0], color=color))
             if treatment:
                 legends.append(f"{line} with {treatment} and corrected with filter")

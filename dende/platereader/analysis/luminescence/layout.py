@@ -10,20 +10,19 @@ from .settings import LuminescenceSettings
 logger = logging.getLogger(__name__)
 
 
-def init(window, xlsx, proto_info_sheet, listbox):
-    luminescence_settings = LuminescenceSettings(proto_info_sheet)
+def init(window, data, proto_info, listbox):
     root = window
 
     notebook = ttk.Notebook(root)
     settings = Settings(treatments=["", "", "", "", ""])
 
-    well_plate = create_well_plate(xlsx, settings)
+    well_plate = create_well_plate(data, proto_info, settings)
 
     samples_frame = SamplesFrame(notebook, settings)
     treatments_frame = TreatmentsFrame(notebook, settings)
     layout_frame = LayoutFrame(notebook, settings, well_plate,
-                               continue_function=lambda n=notebook, w=well_plate, ls=luminescence_settings, lb=listbox:
-                               draw_plot_window(n, w, ls, lb))
+                               continue_function=lambda n=notebook, w=well_plate, pi=proto_info, lb=listbox:
+                               draw_plot_window(n, w, pi, lb))
 
     samples_frame.draw()
     treatments_frame.draw()

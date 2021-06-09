@@ -1,12 +1,10 @@
 import logging
-import re
 import tkinter as tk
 from functools import partial
 from tkinter import ttk
 from tkinter.colorchooser import askcolor
 
 import matplotlib as plt
-import pandas as pd
 
 from dende.platereader.layout.tabbed_frame import TabbedFrame
 from dende.platereader.analysis.multichromatic_fluorescence.plot import plot, autofluorescence_plot, ratio_plot
@@ -23,15 +21,17 @@ class PlotFrame(TabbedFrame):
     def __init__(self, notebook, settings, well_plate):
         super().__init__(notebook, settings, "Plot")
         self.well_plate = well_plate
-        self.data = self.get_data()
+        self.data = self.well_plate.get_named_data()
         self.labels = ["Samples"]
-        for wavelength in self.wavelengths:
-            self.labels = self.labels + [f"Plot {wavelength}", "Color"]
+        for lens_setting in self.data:
+            label = lens_setting.split("(")[1][:-1]
+            self.labels = self.labels + [label, "Color"]
         self.labels = self.labels + ["Autofluorescence", "Plot Ratio", "Color"]
         stock_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-        self.colors = {wavelength: stock_colors + stock_colors
-                       for wavelength in self.wavelengths}
-        self.color_buttons = {wavelength: [] for wavelength in self.wavelengths}
+        # todo: turn colors etc into dataframes like for luminescence
+        self.colors = {lens_setting: stock_colors + stock_colors
+                       for lens_setting in list(self.data.keys())}
+        self.color_buttons = {lens_setting: [] for lens_setting in list(self.data.keys())}
         self.ratio_colors = stock_colors + stock_colors
         self.ratio_color_buttons = []
 
@@ -52,10 +52,7 @@ class PlotFrame(TabbedFrame):
         self.af_vars.clear()
         self.ratio_vars.clear()
 
-        well_dict = self.well_plate.get_well_dict()
-        well_mapping = self.well_plate.get_well_mapping(well_dict)
-
-        for k, sample in enumerate(sorted(well_mapping.keys())):
+        for k, sample in enumerate(self.well_plate.get_well_mapping()):
             try:
                 line, _ = sample.split("$")
             except ValueError:
@@ -63,22 +60,23 @@ class PlotFrame(TabbedFrame):
             label = ttk.Label(plot_config_frame, text=sample)
             label.grid(row=i, column=0, padx='5', pady='5', sticky='ew')
             j = 1
-            for wavelength, desc in self.wavelengths.items():
+            for lens_setting in self.data:
                 plot_var = tk.Variable()
                 plot_checkbox = tk.Checkbutton(plot_config_frame, variable=plot_var)
                 plot_checkbox.select()
-                if wavelength not in self.plot_vars:
-                    self.plot_vars[wavelength] = {}
-                self.plot_vars[wavelength][sample] = plot_var
+                if lens_setting not in self.plot_vars:
+                    self.plot_vars[lens_setting] = {}
+                self.plot_vars[lens_setting][sample] = plot_var
                 plot_checkbox.grid(row=i, column=j, padx='5', pady='5')
                 j = j + 1
-                color = self.colors[wavelength][k]
+                color = self.colors[lens_setting][k]
                 color_button = tk.Button(plot_config_frame, bg=color, text=None,
-                                         command=partial(self.handle_color_button, wavelength, k))
+                                         command=partial(self.handle_color_button, lens_setting, k))
                 color_button.grid(row=i, column=j, padx='5', pady='5', )
-                self.color_buttons[wavelength].append(color_button)
+                self.color_buttons[lens_setting].append(color_button)
 
                 j = j + 1
+
             if self.settings.control and (line != self.settings.control):
                 af_var = tk.Variable()
                 af_checkbox = tk.Checkbutton(plot_config_frame, variable=af_var)
@@ -121,107 +119,37 @@ class PlotFrame(TabbedFrame):
         self.ratio_color_buttons[i].configure(bg=hexcolor)
 
     def handle_plot_button(self):
-        column_names = []
         plain_plots = []
         autofluorescence_plots = []
         ratio_plots = {"plain": [], "af": []}
 
-        well_dict = self.well_plate.get_well_dict()
-        well_mapping = self.well_plate.get_well_mapping(well_dict)
-
-        for wavelength, samples in self.plot_vars.items():
+        for lens_setting, samples in self.plot_vars.items():
             for i, (sample, plot_var) in enumerate(samples.items()):
-                color = self.colors[wavelength][i]
+                color = self.colors[lens_setting][i]
                 af_var = self.af_vars.get(sample)
                 if plot_var.get() == "1":
                     if af_var and af_var.get() == "1":
-                        autofluorescence_plots.append([f"{wavelength}${sample}", color])
-                        try:
-                            line, treatment = sample.split("$")
-                            column_names.extend([f"{wavelength}${self.settings.control}${treatment}${i}"
-                                                 for i in
-                                                 range(len(well_mapping[f"{self.settings.control}${treatment}"]))])
-
-                        except ValueError:
-                            column_names.extend([f"{wavelength}${self.settings.control}${i}"
-                                                 for i in
-                                                 range(len(well_mapping[f"{self.settings.control}"]))])
-
+                        autofluorescence_plots.append([f"{lens_setting}!{sample}", color])
                     else:
-                        plain_plots.append([f"{wavelength}${sample}", color])
-
-                    column_names.extend([f"{wavelength}${sample}${i}" for i in range(len(well_mapping[sample]))])
+                        plain_plots.append([f"{lens_setting}!{sample}", color])
 
         for i, (sample, ratio_var) in enumerate(self.ratio_vars.items()):
             if ratio_var.get() == "1":
-                try:
-                    _, treatment = sample.split("$")
-                except ValueError:
-                    treatment = None
-                for wavelength in self.wavelengths:
-                    column_names.extend([f"{wavelength}${sample}${i}" for i in range(len(well_mapping[sample]))])
                 af_var = self.af_vars.get(sample)
                 if af_var and af_var.get() == "1":
-                    for wavelength in self.wavelengths:
-                        if treatment:
-                            column_names.extend([f"{wavelength}${self.settings.control}${treatment}${i}"
-                                                 for i in
-                                                 range(len(well_mapping[f"{self.settings.control}${treatment}"]))])
-                        else:
-                            column_names.extend([f"{wavelength}${self.settings.control}${i}"
-                                                 for i in range(len(well_mapping[f"{self.settings.control}"]))])
                     ratio_plots["af"].append([sample, self.ratio_colors[i]])
                 else:
                     ratio_plots["plain"].append([sample, self.ratio_colors[i]])
 
         # remove duplicates
-        column_names = list(set(column_names))
-        data = self.get_data()
-        plot_data = data[column_names].copy()
+
+        merged_data = self.well_plate.get_merged_data()
+        named_data = self.well_plate.get_named_data()
 
         if ratio_plots["plain"] or ratio_plots["af"]:
-            ratio_plot(plot_data, ratio_plots, sorted(self.wavelengths.keys()), self.settings.control)
+            ratio_plot(merged_data, ratio_plots, sorted(named_data.keys()), self.settings.control)
         elif autofluorescence_plots:
-            autofluorescence_plot(plot_data, autofluorescence_plots, self.settings.control)
+            autofluorescence_plot(merged_data, autofluorescence_plots, self.settings.control)
         elif plain_plots:
-            plot(plot_data, plain_plots)
+            plot(merged_data, plain_plots)
 
-    def get_data(self):
-        xlsx = self.well_plate.get_xlsx()
-        descs = xlsx.iloc[14:, 0].unique()
-
-        pattern = r"Raw Data \(F: (?P<excitation_wavelength>\d+)-(?P<excitation_spread>\d+)/" \
-                  r"F: (?P<emission_wavelength>\d+)-(?P<emission_spread>\d+) (?P<setting_number>\d+)\)"
-        regex = re.compile(pattern)
-
-        well_dict = self.well_plate.get_well_dict()
-        well_mapping = self.well_plate.get_well_mapping(well_dict)
-
-        wavelength_datas = []
-
-        for desc in descs:
-            # todo(dende): I'm sure there is a better way. but python regex is weird
-            match = [m.groupdict() for m in regex.finditer(desc)][0]
-            self.wavelengths[match["excitation_wavelength"]] = desc
-            mask = xlsx.iloc[:, 0].str.contains(desc.strip(), regex=False, na=False)
-            wavelength_data = xlsx[mask].copy()
-            wavelength_data.columns = xlsx.iloc[13].copy()
-            wavelength_data = wavelength_data.iloc[:, 1:]
-            wavelength_data = wavelength_data.set_index(wavelength_data.columns[0])
-            # column names are not mutable anymore once it belongs to df.columns so lets keep a mutable copy.
-            # yes, i know this is shit code
-            headers = xlsx.iloc[13, 2:].copy()
-            headers = headers.values
-
-            for sample in well_mapping:
-                well_mapping[sample] = sorted(well_mapping[sample])
-                i = 0
-                for col in well_mapping[sample]:
-                    headers[col] = f"{match['excitation_wavelength']}${sample}${i}"
-                    i = i + 1
-            wavelength_data.columns = headers
-            wavelength_datas.append(wavelength_data.copy())
-
-        data = pd.concat(wavelength_datas, axis=1)
-        data = data.loc[:, ~data.columns.str.startswith('Sample ')]
-        return data

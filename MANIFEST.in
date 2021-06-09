@@ -1,0 +1,3 @@
+include dende/platereader/matplotlibrc
+include dende/platereader/platereader.ico
+global-exclude *.pyc

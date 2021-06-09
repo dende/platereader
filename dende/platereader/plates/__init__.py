@@ -10,8 +10,8 @@ def _create_circle(self, x, y, r, **kwargs):
 tk.Canvas.create_circle = _create_circle
 
 
-def create_well_plate(xlsx, settings):
-    return create_nunc96_plate(xlsx, settings)
+def create_well_plate(data, proto_info, settings):
+    return create_nunc96_plate(data, proto_info, settings)
 
 
 WELL_PLATE_TYPES = [

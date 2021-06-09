@@ -1,4 +1,5 @@
 import logging
+import re
 import tkinter as tk
 import typing
 from functools import partial
@@ -15,16 +16,18 @@ class WellPlate:
     frame = None  # type: typing.Optional[tk.Frame]
     layout_frame = None
 
-    def __init__(self, xlsx, settings):
+    def __init__(self, data, proto_info, settings):
+        self.data = data
+        self.proto_info = proto_info
         self.settings = settings
-        self.xlsx = xlsx
-        self.wells = xlsx.iloc[11:13, 2:].copy().reset_index(drop=True)
-        self.wells.columns = range(0, len(self.wells.columns))
+        self.named_data = None
+        self.merged_data = None
+        self.wells = list(self.data.values())[0].columns.values.tolist()
         self.well_plate = pd.DataFrame(False, index=["A", "B", "C", "D", "E", "F", "G", "H"], columns=range(1, 13))
 
-        for column in self.wells:
-            row_id = self.wells[column][0]
-            col_id = self.wells[column][1]
+        for identifier in self.wells:
+            row_id = identifier[0]
+            col_id = int(identifier[1:])
             self.well_plate.loc[row_id, col_id] = True
 
     def set_layout_frame(self, layout_frame):
@@ -33,24 +36,19 @@ class WellPlate:
     def get_samples(self):
         return self.settings.samples
 
-    def get_well_dict(self):
-        well_dict = {}
-        for column in self.wells:
-            row_id = self.wells[column][0]
-            col_id = self.wells[column][1]
-            well_dict[f"{row_id}{col_id}"] = column
-        return well_dict
+    def get_wells(self):
+        return self.wells
 
-    def get_well_mapping(self, well_dict):
+    def get_well_mapping(self):
         well_mapping = {}
-        for column in self.well_plate.columns:
-            for index in self.well_plate.index:
-                sample_name = self.well_plate.loc[index][column]
+        for well_number in self.well_plate.columns:
+            for well_letter in self.well_plate.index:
+                sample_name = self.well_plate.loc[well_letter][well_number]
                 if isinstance(sample_name, str):
-                    data_column = well_dict[f"{index}{column}"]
+                    well_identifier = f"{well_letter}{well_number:02}"
                     if sample_name not in well_mapping:
                         well_mapping[sample_name] = []
-                    well_mapping[sample_name].append(data_column)
+                    well_mapping[sample_name].append(well_identifier)
         return well_mapping
 
     def get_sample_list(self):
@@ -114,12 +112,41 @@ class WellPlate:
             self.well_plate.iloc[row, col] != self.settings.selected_sample else True
         self.layout_frame.draw()
 
-    def get_xlsx(self):
-        return self.xlsx.copy()
-
     def get_data(self):
-        return self.xlsx.iloc[13:, 1:].copy()
+        return self.data.copy()
 
+    def get_named_data(self):
+        if self.named_data is None:
+            pattern = re.compile("^[A-Z][0-9]{2}$")
+            named_data = self.data.copy()
+            well_mapping = self.get_well_mapping()
 
-def create_well_plate(xlsx, settings):
-    return WellPlate(xlsx, settings)
+            rename_dict = {column: f"{sample}§{i}"
+                           for sample, columns in well_mapping.items()
+                           for i, column in enumerate(columns)}
+
+            for content_type in named_data:
+                named_data[content_type].rename(columns=rename_dict, inplace=True)
+                column_names = list(named_data[content_type].columns.values)
+                unused_column_names = [column_name for column_name in column_names if pattern.match(column_name)]
+                named_data[content_type] =\
+                    named_data[content_type][named_data[content_type].columns.difference(unused_column_names)]
+            self.named_data = named_data
+        return self.named_data.copy()
+
+    def get_merged_data(self):
+        if self.merged_data is None:
+            named_data = self.get_named_data()
+
+            for lens_setting, df in named_data.items():
+                if self.merged_data is None:
+                    self.merged_data = df.copy()
+                    self.merged_data.rename(columns=lambda x, ls=lens_setting: f"{ls}!{x}", inplace=True)
+                else:
+                    data = df.copy()
+                    data.rename(columns=lambda x, ls=lens_setting: f"{ls}!{x}", inplace=True)
+                    self.merged_data = pd.concat([self.merged_data, data], axis=1)
+        return self.merged_data.copy()
+
+def create_well_plate(data, proto_info, settings):
+    return WellPlate(data, proto_info, settings)

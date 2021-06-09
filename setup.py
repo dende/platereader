@@ -35,6 +35,6 @@ setup(
             'flake8',
             'pyinstaller'
         ]
-    }
-
+    },
+    include_package_data=True
 )

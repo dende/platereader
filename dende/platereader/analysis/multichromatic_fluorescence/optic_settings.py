@@ -37,28 +37,37 @@ class OpticPreset:
 
 class OpticSettings:
 
-    def __init__(self, proto_info_sheet):
-        optic_start = None
-        optic_end = None
-        for i, cell in enumerate(proto_info_sheet[0]):
-            cell = str(cell)
-            cell = cell.strip()
-            if cell == "Optic settings" and optic_start is None:
-                optic_start = i
+    def __init__(self, presets, wells_used_for_gain_adjustment, focal_height):
 
-            elif cell == "Optic settings" and optic_start is not None:
-                optic_end = i
+        self.presets = presets
+        self.wells_used_for_gain_adjustment = wells_used_for_gain_adjustment
+        self.focal_height = focal_height
 
-        optic_settings_subtable = proto_info_sheet.iloc[optic_start+2:optic_end-2, :].copy()
-        optic_settings_subtable.columns = optic_settings_subtable.iloc[0]
-        optic_settings_subtable = optic_settings_subtable.drop(optic_settings_subtable.index[0])
-        optic_settings_subtable = optic_settings_subtable.set_index(optic_settings_subtable.columns[0])
 
-        self.presets = {}
+def create_multichromatic_fluorescence_optic_settings(proto_info_sheet):
+    optic_start = None
+    optic_end = None
+    for i, cell in enumerate(proto_info_sheet[0]):
+        cell = str(cell)
+        cell = cell.strip()
+        if cell == "Optic settings" and optic_start is None:
+            optic_start = i
 
-        for i, row in optic_settings_subtable.iterrows():
-            self.presets[i] = OpticPreset(row["Presetname"], row["Excitation"], row["Dichroic filter"], row["Emission"],
-                                          row["Gain"])
+        elif cell == "Optic settings" and optic_start is not None:
+            optic_end = i
 
-        self.wells_used_for_gain_adjustment = proto_info_sheet[1][optic_end + 2]
-        self.focal_height = proto_info_sheet[1][optic_end + 3]
+    optic_settings_subtable = proto_info_sheet.iloc[optic_start + 2:optic_end - 2, :].copy()
+    optic_settings_subtable.columns = optic_settings_subtable.iloc[0]
+    optic_settings_subtable = optic_settings_subtable.drop(optic_settings_subtable.index[0])
+    optic_settings_subtable = optic_settings_subtable.set_index(optic_settings_subtable.columns[0])
+
+    presets = {}
+
+    for i, row in optic_settings_subtable.iterrows():
+        presets[i] = OpticPreset(row["Presetname"], row["Excitation"], row["Dichroic filter"], row["Emission"],
+                                      row["Gain"])
+
+    wells_used_for_gain_adjustment = proto_info_sheet[1][optic_end + 2]
+    focal_height = proto_info_sheet[1][optic_end + 3]
+
+    return OpticSettings(presets, wells_used_for_gain_adjustment, focal_height)
