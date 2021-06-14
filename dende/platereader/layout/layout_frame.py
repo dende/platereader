@@ -26,11 +26,13 @@ class LayoutFrame(TabbedFrame):
         for widget in self.frame.winfo_children():
             widget.destroy()
 
+        samples = self.settings.get_samples()
+
         if self.settings.treatments:
             sample_list = [f"{sample}${treatment}"
-                           for sample in self.settings.samples for treatment in self.settings.treatments]
+                           for sample in self.settings.materials for treatment in self.settings.treatments]
         else:
-            sample_list = [f"{sample}" for sample in self.settings.samples]
+            sample_list = [f"{sample}" for sample in self.settings.materials]
 
         layout_bottom_frame = ttk.Frame(self.frame, height=20)
         layout_bottom_frame.pack(side=tk.BOTTOM, fill="x")

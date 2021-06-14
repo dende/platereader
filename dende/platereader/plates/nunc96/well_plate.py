@@ -34,7 +34,7 @@ class WellPlate:
         self.layout_frame = layout_frame
 
     def get_samples(self):
-        return self.settings.samples
+        return self.settings.materials
 
     def get_wells(self):
         return self.wells
@@ -54,9 +54,9 @@ class WellPlate:
     def get_sample_list(self):
         if self.settings.treatments:
             sample_list = [f"{sample}${treatment}"
-                           for sample in self.settings.samples for treatment in self.settings.treatments]
+                           for sample in self.settings.materials for treatment in self.settings.treatments]
         else:
-            sample_list = [f"{sample}" for sample in self.settings.samples]
+            sample_list = [f"{sample}" for sample in self.settings.materials]
         return sample_list
 
     def write_on_canvas(self, canvas, i, j, text):
@@ -76,9 +76,6 @@ class WellPlate:
         canvas.pack(side=tk.LEFT)
 
         sample_list = self.get_sample_list()
-
-        # for i in range(len(self.well_plate.columns) + 2):
-        #     for j in range(len(self.well_plate.index) + 2):
 
         well_plate = self.well_plate
         for i, j in [(i, j) for i in range(len(well_plate.columns)+2) for j in range(len(well_plate.index)+2)]:

@@ -5,7 +5,6 @@ from tkinter import ttk
 from .plot_frame import PlotFrame
 from dende.platereader.layout import LayoutFrame, SamplesFrame, TreatmentsFrame, Settings
 from dende.platereader.plates import create_well_plate
-from .settings import LuminescenceSettings
 
 logger = logging.getLogger(__name__)
 

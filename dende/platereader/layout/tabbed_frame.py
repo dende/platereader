@@ -1,6 +1,8 @@
 import logging
 from tkinter import ttk
 
+from .settings import Settings
+
 logger = logging.getLogger(__name__)
 
 
@@ -8,7 +10,7 @@ class TabbedFrame:
     frame = None
     notebook = None
 
-    def __init__(self, notebook, settings, text):
+    def __init__(self, notebook, settings: Settings, text):
         self.notebook = notebook
         self.settings = settings
         self.text = text

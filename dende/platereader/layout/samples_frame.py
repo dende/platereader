@@ -12,7 +12,7 @@ class SamplesFrame(TabbedFrame):
     def __init__(self, notebook, settings):
         super().__init__(notebook, settings, "Samples")
 
-        self.samples = settings.samples
+        self.samples = settings.materials
         self.control = settings.control
         self.sample_name_vars = []  # type: list[tk.StringVar]
         self.control_vars = []  # type: list[tk.BooleanVar]
@@ -51,5 +51,5 @@ class SamplesFrame(TabbedFrame):
                 if self.control_vars[i].get():
                     self.control = sample_name
 
-        self.settings.samples = self.samples
+        self.settings.materials = self.samples
         self.settings.control = self.control
