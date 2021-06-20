@@ -160,7 +160,7 @@ def get_data_and_proto_info_from_txt(df):
     return datas, proto_info
 
 
-def open_file(path):
+def open_file(path) -> (dict, ProtocolInfo):
     filename = os.path.basename(path)
     filename, extension = os.path.splitext(filename)
     logger.info(f"{filename}, {extension}")

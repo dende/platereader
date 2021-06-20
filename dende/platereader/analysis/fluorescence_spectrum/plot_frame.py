@@ -43,11 +43,7 @@ class PlotFrame(TabbedFrame):
         well_mapping = self.well_plate.get_well_mapping()
 
         for j, sample in enumerate(sorted(well_mapping.keys())):
-            try:
-                line, _ = sample.split("$")
-            except ValueError:
-                line, _ = sample, None
-            label = ttk.Label(plot_config_frame, text=sample)
+            label = ttk.Label(plot_config_frame, text=sample.get_description())
             label.grid(row=i, column=0, padx='5', pady='5', sticky='ew')
 
             plot_var = tk.Variable()
@@ -56,7 +52,7 @@ class PlotFrame(TabbedFrame):
             self.plot_vars[sample] = plot_var
             plot_checkbox.grid(row=i, column=1, padx='5', pady='5', )
 
-            if self.settings.control and (line != self.settings.control):
+            if self.settings.control and (not sample.material.control):
                 af_var = tk.Variable()
                 af_checkbox = tk.Checkbutton(plot_config_frame, variable=af_var)
                 af_checkbox.deselect()
@@ -85,11 +81,8 @@ class PlotFrame(TabbedFrame):
         data = data[list(data.keys())[0]]  # in flourescence spectrum data there is usually just one lens setting?
         # todo: maybe abstract the settings and always offer to plot all of them
 
-        column_names = []
         plain_plots = []
         autofluorescence_plots = []
-
-        well_mapping = self.well_plate.get_well_mapping()
 
         for i, (sample, plot_var) in enumerate(self.plot_vars.items()):
             color = self.colors[i]
@@ -97,21 +90,9 @@ class PlotFrame(TabbedFrame):
             if plot_var.get() == "1":
                 if af_var and af_var.get() == "1":
                     autofluorescence_plots.append([sample, color])
-                    try:
-                        line, treatment = sample.split("$")
-                        column_names.extend(
-                            [f"{self.settings.control}${treatment}§{i}"
-                             for i in range(len(well_mapping[f"{self.settings.control}${treatment}"]))])
-                    except ValueError:
-                        column_names.extend(
-                            [f"{self.settings.control}§{i}"
-                             for i in range(len(well_mapping[f"{self.settings.control}"]))])
-
                 else:
                     plain_plots.append([sample, color])
 
-                column_names.extend([f"{sample}§{i}" for i in range(len(well_mapping[sample]))])
-
-        plot_data = data[column_names].copy()
+        plot_data = data.copy()
         spectrum_plot = SpectrumPlot(plot_data, plain_plots, autofluorescence_plots, self.settings.control)
         spectrum_plot.plot()

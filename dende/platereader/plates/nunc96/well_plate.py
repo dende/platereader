@@ -2,10 +2,13 @@ import logging
 import re
 import tkinter as tk
 import typing
+from collections import defaultdict
 from functools import partial
 
 import pandas as pd
 import numpy as np
+
+from dende.platereader.analysis.sample import Sample
 
 logger = logging.getLogger(__name__)
 
@@ -40,14 +43,12 @@ class WellPlate:
         return self.wells
 
     def get_well_mapping(self):
-        well_mapping = {}
+        well_mapping = defaultdict(list)
         for well_number in self.well_plate.columns:
             for well_letter in self.well_plate.index:
                 sample_name = self.well_plate.loc[well_letter][well_number]
-                if isinstance(sample_name, str):
+                if isinstance(sample_name, Sample):
                     well_identifier = f"{well_letter}{well_number:02}"
-                    if sample_name not in well_mapping:
-                        well_mapping[sample_name] = []
                     well_mapping[sample_name].append(well_identifier)
         return well_mapping
 
@@ -75,7 +76,7 @@ class WellPlate:
         canvas = tk.Canvas(root, width=500, height=360)
         canvas.pack(side=tk.LEFT)
 
-        sample_list = self.get_sample_list()
+        samples = self.settings.get_samples()
 
         well_plate = self.well_plate
         for i, j in [(i, j) for i in range(len(well_plate.columns)+2) for j in range(len(well_plate.index)+2)]:
@@ -96,7 +97,7 @@ class WellPlate:
                 elif val:
                     sample = val
                     try:
-                        sample_index = sample_list.index(sample)
+                        sample_index = samples.index(sample)
                         color = self.colors[sample_index]
                         self.add_well(canvas, i, j, fill=color, handler=partial(self.handle_well_click, j-2, i-2))
                     except ValueError:
@@ -105,8 +106,11 @@ class WellPlate:
                         self.add_well(canvas, i, j, fill=None, handler=partial(self.handle_well_click, j-2, i-2))
 
     def handle_well_click(self, row, col, event=None):
-        self.well_plate.iloc[row, col] = self.settings.selected_sample if \
-            self.well_plate.iloc[row, col] != self.settings.selected_sample else True
+        clicked_well = self.well_plate.iloc[row, col]
+        if clicked_well == self.settings.selected_sample:
+            self.well_plate.iloc[row, col] = True
+        else:
+            self.well_plate.iloc[row, col] = self.settings.selected_sample
         self.layout_frame.draw()
 
     def get_data(self):

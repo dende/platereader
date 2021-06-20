@@ -70,12 +70,7 @@ class PlotFrame(TabbedFrame):
         sep.grid(row=1, columnspan=len(self.labels), sticky="ew")
 
         for i, sample in enumerate(self.samples):
-            try:
-                line, _ = sample.split("$")
-            except ValueError:
-                line, _ = sample, None
-            _ = line
-            label = ttk.Label(plot_config_frame, text=sample)
+            label = ttk.Label(plot_config_frame, text=sample.get_description())
             label.grid(row=i+2, column=0, padx='5', pady='5', sticky='ew')
 
             for j, preset in enumerate(self.presets):

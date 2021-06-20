@@ -44,7 +44,7 @@ class LuminescencePlot:
         if col_name in self.df:
             logger.warning(f"Already calculated avg and errors for {col_name}")
             return
-        col_names = [col for col in self.df if col.startswith(col_name)]
+        col_names = [col for col in self.df if col.startswith(f"{col_name}§")]
         self.df[col_name] = self.df[col_names].mean(axis=1)
         self.df[col_name + "-STD"] = self.df[col_names].std(axis=1)  # calculate the errors column
         self.df[col_name + "-SEM"] = self.df[col_names].sem(axis=1)  # calculate the errors column
@@ -53,26 +53,20 @@ class LuminescencePlot:
         lines = []
         legends = []
         ax = None
-        for preset, sample, color in self.plain_data:
-            try:
-                line, treatment = sample.split("$")
-            except ValueError:
-                line, treatment = sample, None
-            self.calc_avg_std_sem(f"{preset}!{sample}")
-            ax = self.plot_lines_with_errorbars(f"{preset}!{sample}",
-                                                error=f"{preset}!{sample}-STD", color=color)
-            self.plot_dots(f"{preset}!{sample}", color=color, ax=ax)
+        for lens_setting, sample, color in self.plain_data:
+            material, treatment = sample.material, sample.treatment
+            self.calc_avg_std_sem(f"{lens_setting}!{sample}")
+            ax = self.plot_lines_with_errorbars(f"{lens_setting}!{sample}",
+                                                error=f"{lens_setting}!{sample}-STD", color=color)
+            self.plot_dots(f"{lens_setting}!{sample}", color=color, ax=ax)
             lines.append(Line2D([0], [0], color=color))
             if treatment:
-                legends.append(f"{line} with {treatment} and {preset}")
+                legends.append(f"{material} with {treatment} and {lens_setting}")
             else:
-                legends.append(f"{line} with {preset}")
+                legends.append(f"{material} with {lens_setting}")
 
         for p1, p2, sample, color in self.diff_data:
-            try:
-                line, treatment = sample.split("$")
-            except ValueError:
-                line, treatment = sample, None
+            material, treatment = sample.material, sample.treatment
 
             self.calc_avg_std_sem(f"{p1}!{sample}")
             self.calc_avg_std_sem(f"{p2}!{sample}")
@@ -86,9 +80,9 @@ class LuminescencePlot:
             self.plot_dots(f"{p1}!{p2}", color=color, ax=ax)
             lines.append(Line2D([0], [0], color=color))
             if treatment:
-                legends.append(f"{line} with {treatment} and corrected with filter")
+                legends.append(f"{material} with {treatment} and corrected with filter")
             else:
-                legends.append(f"{line} corrected with filter")
+                legends.append(f"{material} corrected with filter")
 
         ax.set_ylabel("Luminescence Intensity")
         plt.legend(lines, legends)

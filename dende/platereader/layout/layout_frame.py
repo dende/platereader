@@ -28,12 +28,6 @@ class LayoutFrame(TabbedFrame):
 
         samples = self.settings.get_samples()
 
-        if self.settings.treatments:
-            sample_list = [f"{sample}${treatment}"
-                           for sample in self.settings.materials for treatment in self.settings.treatments]
-        else:
-            sample_list = [f"{sample}" for sample in self.settings.materials]
-
         layout_bottom_frame = ttk.Frame(self.frame, height=20)
         layout_bottom_frame.pack(side=tk.BOTTOM, fill="x")
 
@@ -42,8 +36,9 @@ class LayoutFrame(TabbedFrame):
 
         i = 0
         radiovar = tk.IntVar()
-        for sample in sample_list:
-            radio = tk.Radiobutton(button_frame, text=sample, command=partial(self.select_sample, sample),
+        for sample in samples:
+            radio = tk.Radiobutton(button_frame, text=sample.get_description(),
+                                   command=partial(self.select_sample, sample),
                                    width=20, indicatoron=0, bg=self.well_plate.colors[i], val=i, variable=radiovar)
             radio.pack()
             i = i + 1

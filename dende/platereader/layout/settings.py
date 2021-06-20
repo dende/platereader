@@ -1,4 +1,4 @@
-from dende.platereader.analysis.sample import Sample
+from dende.platereader.analysis.sample import Sample, Material, Treatment
 
 
 class Settings:
@@ -10,16 +10,17 @@ class Settings:
         self.treatment_control = treatment_control
         self.selected_sample = selected_sample
 
-    def get_samples(self):
+    def get_samples(self) -> [Sample]:
         materials = list(filter(None, self.materials))
         treatments = list(filter(None, self.treatments))
 
         samples = []
-        for material in materials:
+        for material_name in materials:
+            material = Material(material_name, material_name == self.control)
             if treatments:
-                for treatment in treatments:
+                for treatment_name in treatments:
+                    treatment = Treatment(treatment_name, treatment_name == self.treatment_control)
                     samples.append(Sample(material=material, treatment=treatment,))
             else:
-
-
-        pass
+                samples.append(Sample(material=material))
+        return samples

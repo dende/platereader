@@ -52,12 +52,9 @@ class PlotFrame(TabbedFrame):
         self.af_vars.clear()
         self.ratio_vars.clear()
 
-        for k, sample in enumerate(self.well_plate.get_well_mapping()):
-            try:
-                line, _ = sample.split("$")
-            except ValueError:
-                line, _ = sample, None
-            label = ttk.Label(plot_config_frame, text=sample)
+        for k, sample in enumerate(sorted(self.well_plate.get_well_mapping())):
+
+            label = ttk.Label(plot_config_frame, text=sample.get_description())
             label.grid(row=i, column=0, padx='5', pady='5', sticky='ew')
             j = 1
             for lens_setting in self.data:
@@ -77,7 +74,7 @@ class PlotFrame(TabbedFrame):
 
                 j = j + 1
 
-            if self.settings.control and (line != self.settings.control):
+            if self.settings.control and (not sample.material.control):
                 af_var = tk.Variable()
                 af_checkbox = tk.Checkbutton(plot_config_frame, variable=af_var)
                 af_checkbox.deselect()
@@ -129,9 +126,9 @@ class PlotFrame(TabbedFrame):
                 af_var = self.af_vars.get(sample)
                 if plot_var.get() == "1":
                     if af_var and af_var.get() == "1":
-                        autofluorescence_plots.append([f"{lens_setting}!{sample}", color])
+                        autofluorescence_plots.append([sample, lens_setting, color])
                     else:
-                        plain_plots.append([f"{lens_setting}!{sample}", color])
+                        plain_plots.append([sample, lens_setting, color])
 
         for i, (sample, ratio_var) in enumerate(self.ratio_vars.items()):
             if ratio_var.get() == "1":

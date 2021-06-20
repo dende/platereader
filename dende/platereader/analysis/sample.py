@@ -12,8 +12,16 @@ class Material:
             return f"*{self.name}*"
         return self.name
 
+    def __key(self):
+        return self.name, self.control
+
+    def __hash__(self):
+        return hash(self.__key())
+
     def __eq__(self, other):
-        return self.name == other.name and self.control == other.control
+        if isinstance(other, Material):
+            return self.__key() == other.__key()
+        return NotImplemented
 
 
 class Treatment:
@@ -27,8 +35,16 @@ class Treatment:
             return f"*{self.name}*"
         return self.name
 
+    def __key(self):
+        return self.name, self.control
+
+    def __hash__(self):
+        return hash(self.__key())
+
     def __eq__(self, other):
-        return self.name == other.name and self.control == other.control
+        if isinstance(other, Treatment):
+            return self.__key() == other.__key()
+        return NotImplemented
 
 
 class Sample:
@@ -38,15 +54,33 @@ class Sample:
         self.treatment = treatment
 
     def __str__(self):
-        if self.treatment is None:
-            return f"{self.material}"
-        return f"{self.material} with {self.treatment}"
-
-    def __repr__(self):
         return f"{self.material}${self.treatment}"
 
+    def __repr__(self):
+        return self.__str__()
+
+    def get_description(self):
+        if self.treatment is None:
+            return f"{self.material}"
+        return f"{self.material.name} with {self.treatment}"
+
+    def __key(self):
+        return self.material, self.treatment
+
+    def __hash__(self):
+        return hash(self.__key())
+
     def __eq__(self, other):
-        return self.material == other.material and self.treatment == other.treatment
+        if isinstance(other, Sample):
+            return self.__key() == other.__key()
+        return NotImplemented
+
+    def __lt__(self, other):
+        if self.material.control and not other.material.control:
+            return True
+        if not self.material.control and other.material.control:
+            return False
+        return self.__str__() < other.__str__()
 
 
 def create_sample_from_string(string: str) -> Sample:

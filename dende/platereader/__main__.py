@@ -62,7 +62,7 @@ def select_file():
     listbox = tk.Listbox(toprow, width=60)
     i = 0
     for attr_name in dir(proto_info):
-        if not attr_name.startswith('__'):
+        if not attr_name.startswith('__') and attr_name != "settings":
             listbox.insert(i, f"{attr_name}: {getattr(proto_info, attr_name)}")
             i = i + 1
 
