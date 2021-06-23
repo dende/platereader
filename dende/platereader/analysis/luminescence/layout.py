@@ -55,8 +55,8 @@ def tab_change(frames, event):
         frames.get(tab).draw()
 
 
-def draw_plot_window(notebook, well_plate, luminescence_settings, listbox):
+def draw_plot_window(notebook, well_plate, proto_info, listbox):
     for widget in notebook.winfo_children():
         widget.destroy()
-    plot_frame = PlotFrame(notebook, well_plate.settings, well_plate, luminescence_settings, listbox)
+    plot_frame = PlotFrame(notebook, well_plate.settings, well_plate, proto_info, listbox)
     plot_frame.draw()

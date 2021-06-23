@@ -24,3 +24,14 @@ class Settings:
             else:
                 samples.append(Sample(material=material))
         return samples
+
+    def has_autofluorescence(self):
+        samples = self.get_samples()
+        othersamples = self.get_samples()
+
+        for sample in samples:
+            for othersample in othersamples:
+                if sample.material.name == othersample.material.name and \
+                   sample.material.control != othersample.material.control:
+                    return True
+        return False

@@ -1,5 +1,4 @@
 import logging
-import re
 import tkinter as tk
 from functools import partial
 from tkinter import ttk
@@ -30,12 +29,10 @@ class PlotFrame(TabbedFrame):
         listbox.delete(0, tk.END)
 
         self.labels = ["Samples"]
-        i = 0
-        for preset_number, setting in self.luminescence_settings.optic_settings.presets.items():
+        for i, (preset_number, setting) in enumerate(self.luminescence_settings.optic_settings.presets.items()):
             self.labels.append(f"Plot preset {preset_number}")
             self.labels.append("Color")
             listbox.insert(i, f"Preset {preset_number}: {setting}")
-            i = i + 1
 
         if self.luminescence_settings.optic_settings.has_filter_setting() \
                 and self.luminescence_settings.optic_settings.has_no_filter_setting():

@@ -1,11 +1,11 @@
 from dende.platereader.analysis.multichromatic_fluorescence.optic_settings \
-    import create_multichromatic_fluorescence_optic_settings
+    import create_multichromatic_fluorescence_optic_settings, OpticSettings
 
 
 class MultichromaticFluorescenceSettings():
 
     def __init__(self, number_of_cycles, cycle_time, number_of_flashes_per_well_and_cycle, scan_mode,
-                 scan_diameter, optic_settings):
+                 scan_diameter, optic_settings: OpticSettings):
         self.number_of_cycles = number_of_cycles
         self.cycle_time = cycle_time
         self.number_of_flashes_per_well_and_cycle = number_of_flashes_per_well_and_cycle
