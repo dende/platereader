@@ -78,7 +78,7 @@ def select_file():
         multichromatic_fluorescence_init(bottomrow, data, proto_info, listbox)
 
     elif proto_info and proto_info.measurement_type == LUMINESCENCE:
-        luminescence_init(bottomrow, data, proto_info, proto_info, listbox)
+        luminescence_init(bottomrow, data, proto_info, listbox)
 
 
 def main():
