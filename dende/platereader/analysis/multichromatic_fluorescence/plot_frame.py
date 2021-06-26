@@ -104,7 +104,7 @@ class PlotFrame(TabbedFrame):
                 j = j + 1
                 ratio_color = self.colors.loc[sample, ratio]
                 ratio_color_button = tk.Button(plot_config_frame, bg=ratio_color, text=None,
-                                               command=partial(self.handle_color_button, ratio, sample))
+                                               command=partial(self.handle_color_button, sample, ratio))
                 ratio_color_button.grid(row=i, column=j, padx='5', pady='5', )
                 self.color_buttons.loc[sample, ratio] = ratio_color_button
                 j = j + 1
