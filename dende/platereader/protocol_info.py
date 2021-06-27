@@ -150,8 +150,13 @@ def get_data_and_proto_info_from_txt(df):
             time_in_seconds = time_in_seconds + int(findings['seconds'])
         return time_in_seconds
 
-    data['Time'] = data['Time'].map(convert_time)
-    data = data.rename(columns={"Time": "Time [s]"})
+    if "Time" in data:
+        data['Time'] = data['Time'].map(convert_time)
+        data = data.rename(columns={"Time": "Time [s]"})
+
+    for col in data:
+        if col != "Content":
+            data[col] = data[col].astype(float)
 
     datas = split_data_into_dict(data)
 
