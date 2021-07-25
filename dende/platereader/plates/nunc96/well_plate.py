@@ -13,6 +13,67 @@ from dende.platereader.analysis.sample import Sample
 logger = logging.getLogger(__name__)
 
 
+class Well:
+
+    def __init__(self, well_plate, cur_col, cur_idx):
+        self.well_plate = well_plate
+        self.well_column = self.well_plate.well_plate.columns[cur_col]
+        self.well_row = self.well_plate.well_plate.index[cur_idx]
+        self.val = self.well_plate.well_plate[self.well_column][self.well_row]
+        self.cur_col = cur_col
+        self.cur_idx = cur_idx
+        self.i = cur_col + 2
+        self.j = cur_idx + 2
+        self.circle = None
+        self.draw()
+
+    def draw(self):
+
+        if self.circle:
+            self.well_plate.canvas.delete(self.circle)
+
+        samples = self.well_plate.settings.get_samples()
+
+        if isinstance(self.val, np.bool_) or isinstance(self.val, bool):
+            if self.val:
+                self.circle = self.draw_circle(fill="white", handler=self.handle_well_click, hover=self.mouseover)
+            else:
+                self.circle = self.draw_circle(fill="black")
+        elif self.val:
+            sample = self.val
+            try:
+                sample_index = samples.index(sample)
+                color = self.well_plate.colors[sample_index]
+                self.circle = self.draw_circle(fill=color, handler=self.handle_well_click)
+            except ValueError:
+                # we deleted either the corresponding sample or treatment
+                self.well_plate.well_plate.iloc[self.cur_idx, self.cur_col] = True
+                self.circle = self.draw_circle(fill=None, handler=self.handle_well_click)
+
+    def draw_circle(self, fill=None, handler=None, hover=None):
+        tags = f"{self.i}${self.j}"
+        circle = self.well_plate.canvas.create_circle(self.i * 35 + (35 / 2), self.j * 35 + (35 / 2), 15, fill=fill, outline="black", tags=tags)
+        if handler:
+            self.well_plate.canvas.tag_bind(tags, "<Button-1>", handler)
+        if hover:
+            self.well_plate.canvas.tag_bind(tags, '<Enter>', hover)
+        return circle
+
+    def mouseover(self, event=None):
+        self.well_plate.layout_frame.update_preview(self.well_row, self.well_column)
+
+    def handle_well_click(self, event=None):
+        if self.val == self.well_plate.settings.selected_sample:
+            self.well_plate.well_plate.loc[self.well_row, self.well_column] = True
+            self.val = True
+        else:
+            if self.well_plate.settings.selected_sample:
+                self.well_plate.well_plate.loc[self.well_row, self.well_column] = self.well_plate.settings.selected_sample
+                self.val = self.well_plate.settings.selected_sample
+
+        self.draw()
+
+
 class WellPlate:
     colors = ["#00876c", "#3d9a70", "#64ad73", "#89bf77", "#afd17c", "#d6e184", "#fff18f",
               "#fdd576", "#fbb862", "#f59b56", "#ee7d4f", "#e35e4e", "#d43d51"]
@@ -23,10 +84,14 @@ class WellPlate:
         self.data = data
         self.proto_info = proto_info
         self.settings = settings
+        self.samples = self.settings.get_samples()
         self.named_data = None
         self.merged_data = None
         self.wells = list(self.data.values())[0].columns.values.tolist()
         self.well_plate = pd.DataFrame(False, index=["A", "B", "C", "D", "E", "F", "G", "H"], columns=range(1, 13))
+        self.well_objects = pd.DataFrame(False, index=["A", "B", "C", "D", "E", "F", "G", "H"], columns=range(1, 13))
+        self.canvas = None
+        self.last = None
 
         for identifier in self.wells:
             row_id = identifier[0]
@@ -35,9 +100,6 @@ class WellPlate:
 
     def set_layout_frame(self, layout_frame):
         self.layout_frame = layout_frame
-
-    def get_samples(self):
-        return self.settings.materials
 
     def get_wells(self):
         return self.wells
@@ -64,54 +126,24 @@ class WellPlate:
         canvas.create_text(i * 35 + (35 / 2), j * 35 + (35 / 2), fill="black",
                            font="Helvetica 20 bold", text=text)
 
-    def add_well(self, canvas, i, j, fill=None, handler=None):
-        tags = f"{i}${j}"
-        canvas.create_circle(i * 35 + (35 / 2), j * 35 + (35 / 2), 15, fill=fill, outline="black", tags=tags)
-        if handler:
-            canvas.tag_bind(tags, "<Button-1>", handler)
-
     def draw(self, root):
         # todo(dende): refactor into smaller parts, cyclomatic complexity is 12
 
-        canvas = tk.Canvas(root, width=500, height=360)
-        canvas.pack(side=tk.LEFT)
-
-        samples = self.settings.get_samples()
+        self.canvas = tk.Canvas(root, width=500, height=360)
+        self.canvas.pack(side=tk.LEFT)
 
         well_plate = self.well_plate
         for i, j in [(i, j) for i in range(len(well_plate.columns)+2) for j in range(len(well_plate.index)+2)]:
+            cur_col = i - 2
+            cur_idx = j - 2
             if i == 0 and j > 1:
-                self.write_on_canvas(canvas, i, j, well_plate.index[j - 2])
+                self.write_on_canvas(self.canvas, i, j, well_plate.index[cur_idx])
             elif j == 0 and i > 1:
-                self.write_on_canvas(canvas, i, j, well_plate.columns[i-2])
+                self.write_on_canvas(self.canvas, i, j, well_plate.columns[cur_col])
             elif i > 1 and j > 1:
-                well_column = well_plate.columns[i-2]
-                well_row = well_plate.index[j-2]
-                val = well_plate[well_column][well_row]
-                if isinstance(val, np.bool_) or isinstance(val, bool):
-                    if val:
-                        self.add_well(canvas, i, j, fill="white", handler=partial(self.handle_well_click, j-2, i-2))
-                    else:
-                        self.add_well(canvas, i, j)
-                        self.write_on_canvas(canvas, i, j, "x")
-                elif val:
-                    sample = val
-                    try:
-                        sample_index = samples.index(sample)
-                        color = self.colors[sample_index]
-                        self.add_well(canvas, i, j, fill=color, handler=partial(self.handle_well_click, j-2, i-2))
-                    except ValueError:
-                        # we deleted either the corresponding sample or treatment
-                        self.well_plate.iloc[j-2, i-2] = True
-                        self.add_well(canvas, i, j, fill=None, handler=partial(self.handle_well_click, j-2, i-2))
-
-    def handle_well_click(self, row, col, event=None):
-        clicked_well = self.well_plate.iloc[row, col]
-        if clicked_well == self.settings.selected_sample:
-            self.well_plate.iloc[row, col] = True
-        else:
-            self.well_plate.iloc[row, col] = self.settings.selected_sample
-        self.layout_frame.draw()
+                well_column = well_plate.columns[cur_col]
+                well_row = well_plate.index[cur_idx]
+                self.well_objects.loc[well_column, well_row] = Well(self, cur_col, cur_idx)
 
     def get_data(self):
         return self.data.copy()
@@ -148,6 +180,7 @@ class WellPlate:
                     data.rename(columns=lambda x, ls=lens_setting: f"{ls}!{x}", inplace=True)
                     self.merged_data = pd.concat([self.merged_data, data], axis=1)
         return self.merged_data.copy()
+
 
 def create_well_plate(data, proto_info, settings):
     return WellPlate(data, proto_info, settings)

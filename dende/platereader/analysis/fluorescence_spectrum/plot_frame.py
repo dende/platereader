@@ -15,7 +15,8 @@ class PlotFrame(TabbedFrame):
     plot_vars = {}
     af_vars = {}
 
-    def __init__(self, notebook, settings, well_plate):
+    def __init__(self, notebook, settings, well_plate, root):
+        self.root = root
         super().__init__(notebook, settings, "Plot")
         self.well_plate = well_plate
         # this are only 10 colors, might be a problem in the future
@@ -94,5 +95,5 @@ class PlotFrame(TabbedFrame):
                     plain_plots.append([sample, color])
 
         plot_data = data.copy()
-        spectrum_plot = SpectrumPlot(plot_data, plain_plots, autofluorescence_plots, self.settings.control)
+        spectrum_plot = SpectrumPlot(self.root, plot_data, plain_plots, autofluorescence_plots, self.settings.control)
         spectrum_plot.plot()

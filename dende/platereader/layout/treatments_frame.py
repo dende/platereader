@@ -17,24 +17,27 @@ class TreatmentsFrame(TabbedFrame):
         self.treatment_name_vars = []
         self.control_vars = []  # type: list[tk.BooleanVar]
 
+        self.centered_frame = ttk.Frame(self.frame, width=648)
+        self.centered_frame.pack(fill=None, expand=None)
+
         for i, sample in enumerate(self.treatments):
-            label = tk.Label(master=self.frame, text=f'Treatment {i + 1}')
+            label = tk.Label(master=self.centered_frame, text=f'Treatment {i + 1}')
             label.grid(row=i, column=0, padx='5', pady='5', sticky='ew')
 
             text_var = tk.StringVar()
             self.treatment_name_vars.append(text_var)
-            entry = tk.Entry(master=self.frame, bg='white', width='40', textvariable=text_var)
+            entry = tk.Entry(master=self.centered_frame, bg='white', width='40', textvariable=text_var)
             text_var.set(sample)
             entry.grid(row=i, column=1, padx='5', pady='5', sticky='ew')
 
             control_var = tk.BooleanVar()
             control_var.set(False)
             self.control_vars.append(control_var)
-            control_button = ttk.Checkbutton(master=self.frame, text="Control", command=partial(self.toggle_control, i),
+            control_button = ttk.Checkbutton(master=self.centered_frame, text="Control", command=partial(self.toggle_control, i),
                                              variable=control_var)
             control_button.grid(row=i, column=2, padx='5', pady='5', )
 
-        self.frame.grid_columnconfigure(1, weight=1)
+        self.centered_frame.grid_columnconfigure(1, weight=1)
 
     def toggle_control(self, i):
         for j, control_var in enumerate(self.control_vars):

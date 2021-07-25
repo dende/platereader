@@ -21,8 +21,7 @@ def init(root, data, proto_info):
     treatments_frame = TreatmentsFrame(notebook, settings)
     layout_frame = LayoutFrame(notebook, settings, well_plate,
                                continue_function=lambda notebook=notebook, well_plate=well_plate:
-                               draw_plot_window(notebook, well_plate))
-
+                               draw_plot_window(notebook, well_plate, root))
     samples_frame.draw()
     treatments_frame.draw()
 
@@ -49,8 +48,8 @@ def tab_change(frames, event):
         frames["Layout"].draw()
 
 
-def draw_plot_window(notebook, well_plate):
+def draw_plot_window(notebook, well_plate, root):
     for widget in notebook.winfo_children():
         widget.destroy()
-    plot_frame = PlotFrame(notebook, well_plate.settings, well_plate)
+    plot_frame = PlotFrame(notebook, well_plate.settings, well_plate, root)
     plot_frame.draw()

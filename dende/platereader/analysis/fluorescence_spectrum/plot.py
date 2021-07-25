@@ -1,16 +1,21 @@
 import logging
 
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.lines import Line2D
+import tkinter as tk
 
 from dende.platereader.analysis.sample import Sample, Treatment, Material
 
 logger = logging.getLogger(__name__)
 
 
-class SpectrumPlot:
 
-    def __init__(self, df, plain_data, autofluorescence_data=None, control=None, title=None):
+class SpectrumPlot(tk.Toplevel):
+
+    def __init__(self, root, df, plain_data, autofluorescence_data=None, control=None, title=None):
+        super().__init__(root)
+        self.geometry("1280x720")
         self.df = df
         self.figsize = (12, 8)
         self.plain_data = plain_data
@@ -21,9 +26,21 @@ class SpectrumPlot:
         self.red_treatmens = ["DTT", "DPS"]
         self.ratios = {"plain": {}, "af": {}}
 
-    def plot_lines_with_errorbars(self, sample, error, color):
+        self.figure = plt.figure()
+        self.ax = self.figure.subplots()
+
+        self.ax.grid(True)
+
+        self.canvas = FigureCanvasTkAgg(self.figure, self)
+        self.canvas.get_tk_widget().pack(side="top", fill='both', expand=True)
+
+        self.toolbar = NavigationToolbar2Tk(self.canvas, self)
+        self.toolbar.update()
+        self.toolbar.pack()
+
+    def plot_lines_with_errorbars(self, sample, error, color, ax=None):
         return self.df[f"{sample}"].plot(figsize=self.figsize, yerr=self.df[error], alpha=0.4, legend=False,
-                                    grid=True, color=color)
+                                    grid=True, color=color, ax=ax)
 
     def plot_dots(self, sample, color, ax):
         return self.df[f"{sample}"].plot(figsize=self.figsize, style=['o'], color=color, markersize=4,
@@ -39,11 +56,12 @@ class SpectrumPlot:
         lines = []
         legends = []
         ax = None
+
         for sample, color in self.plain_data:
             material, treatment = sample.material, sample.treatment
             self.calc_avg_std_sem(sample)
             self.add_to_dynamic_ranges(sample)
-            ax = self.plot_lines_with_errorbars(sample, error=f"{sample}-STD", color=color)
+            ax = self.plot_lines_with_errorbars(sample, error=f"{sample}-STD", color=color, ax=self.ax)
             self.plot_dots(sample, color=color, ax=ax)
             lines.append(Line2D([0], [0], color=color))
             if treatment:
@@ -86,8 +104,8 @@ class SpectrumPlot:
                         legends.append(f"{material}, corrected for autofluorescence: {dynamic_range:.2f}")
 
         ax.set_ylabel("Fluorescence Intensity")
-        plt.legend(lines, legends, markerscale=2)
-        plt.show()
+        ax.legend(lines, legends, markerscale=2)
+        #plt.show()
 
     def calc_dynamic_ranges(self):
         dynamic_ranges = {}

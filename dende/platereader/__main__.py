@@ -52,7 +52,7 @@ def select_file():
         return
 
     root.resizable(True, True)
-    root.geometry("684x684")
+    root.geometry("1280x684")
     for widget in root.winfo_children():
         widget.destroy()
 
