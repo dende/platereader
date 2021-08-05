@@ -1,38 +1,44 @@
 import logging
 import tkinter as tk
 from functools import partial
+from itertools import cycle
 from tkinter import ttk
 from tkinter.colorchooser import askcolor
+
 import matplotlib as plt
 import pandas as pd
-from itertools import cycle
 
-from dende.platereader.analysis.luminescence.plot import LuminescencePlot
-from dende.platereader.layout.tabbed_frame import TabbedFrame
+import dende.platereader.analysis.luminescence.plot as lup
+import dende.platereader.layout.tabbed_frame as tf
+from dende.platereader.plates.nunc96.well_plate import WellPlate
 
 logger = logging.getLogger(__name__)
 
 
-class PlotFrame(TabbedFrame):
+class PlotFrame(tf.TabbedFrame):
     filter_settings = {}
     data = None
 
-    def __init__(self, notebook, settings, well_plate, proto_info, listbox):
-        super().__init__(notebook, settings, "Plot")
+    def __init__(self, root: tk.Tk, well_plate: WellPlate):
+        self.root = root
+        self.settings = well_plate.settings
+        self.notebook = self.root.nametowidget("bottomrow.notebook")
+        self.listbox = self.root.nametowidget("toprow.details_list")
+        super().__init__(root, self.settings, "Plot")
         self.well_plate = well_plate
         self.well_mapping = self.well_plate.get_well_mapping()
         self.samples = sorted(self.well_mapping.keys())
-        self.luminescence_settings = proto_info.settings
+        self.luminescence_settings = self.well_plate.proto_info.settings
         self.presets = [f"{preset}" for preset in self.luminescence_settings.optic_settings.presets.values()]
         colorcycle = cycle(plt.rcParams['axes.prop_cycle'].by_key()['color'])
 
-        listbox.delete(0, tk.END)
+        self.listbox.delete(0, tk.END)
 
         self.labels = ["Samples"]
         for i, (preset_number, setting) in enumerate(self.luminescence_settings.optic_settings.presets.items()):
             self.labels.append(f"Plot preset {preset_number}")
             self.labels.append("Color")
-            listbox.insert(i, f"Preset {preset_number}: {setting}")
+            self.listbox.insert(i, f"Preset {preset_number}: {setting}")
 
         if self.luminescence_settings.optic_settings.has_filter_setting() \
                 and self.luminescence_settings.optic_settings.has_no_filter_setting():
@@ -111,6 +117,6 @@ class PlotFrame(TabbedFrame):
                         plain_plots.append([preset, sample, color])
 
         plot_data = self.well_plate.get_merged_data()
-        luminescence_plot = LuminescencePlot(plot_data, self.time_unit.get(), self.luminescence_settings.optic_settings.presets, plain_plots,
-                                             diff_plots)
+        luminescence_plot = lup.LuminescencePlot(self.root, plot_data, plain_plots, diff_plots,
+                                                 self.luminescence_settings, self.time_unit.get())
         luminescence_plot.plot()

@@ -1,10 +1,10 @@
-from dende.platereader.analysis.fluorescence_spectrum import ANALYSIS_TYPE as FLUORESCENCE_SPECTRUM
-from dende.platereader.analysis.multichromatic_fluorescence import ANALYSIS_TYPE as MULTICHROMATIC_FLUORESCENCE
-from dende.platereader.analysis.luminescence import ANALYSIS_TYPE as LUMINESCENCE
+import dende.platereader.analysis.fluorescence_spectrum as fs
+import dende.platereader.analysis.multichromatic_fluorescence as mf
+import dende.platereader.analysis.luminescence as lu
 
 
 ANALYSIS_TYPES = [
-    FLUORESCENCE_SPECTRUM,
-    MULTICHROMATIC_FLUORESCENCE,
-    LUMINESCENCE,
+    fs.ANALYSIS_TYPE,
+    mf.ANALYSIS_TYPE,
+    lu.ANALYSIS_TYPE,
 ]

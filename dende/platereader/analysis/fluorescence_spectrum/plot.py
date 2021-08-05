@@ -1,19 +1,22 @@
 import logging
+import tkinter as tk
+from typing import List
 
 import matplotlib.pyplot as plt
+import pandas as pd
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.lines import Line2D
-import tkinter as tk
 
-from dende.platereader.analysis.sample import Sample, Treatment, Material
+from dende.platereader.analysis.plot import Plot
+from dende.platereader.analysis.sample import Sample, Material
 
 logger = logging.getLogger(__name__)
 
 
+class FluorescenceSpectrumPlot(tk.Toplevel, Plot):
 
-class SpectrumPlot(tk.Toplevel):
 
-    def __init__(self, root, df, plain_data, autofluorescence_data=None, control=None, title=None):
+    def __init__(self, root: tk.Tk, df: pd.DataFrame, plain_data: List, autofluorescence_data=None, control=None, title=None):
         super().__init__(root)
         self.geometry("1280x720")
         self.df = df
@@ -23,7 +26,7 @@ class SpectrumPlot(tk.Toplevel):
         self.control = control
         self.title = title
         self.ox_treatments = ["H202"]
-        self.red_treatmens = ["DTT", "DPS"]
+        self.red_treatments = ["DTT", "DPS"]
         self.ratios = {"plain": {}, "af": {}}
 
         self.figure = plt.figure()
@@ -40,29 +43,23 @@ class SpectrumPlot(tk.Toplevel):
 
     def plot_lines_with_errorbars(self, sample, error, color, ax=None):
         return self.df[f"{sample}"].plot(figsize=self.figsize, yerr=self.df[error], alpha=0.4, legend=False,
-                                    grid=True, color=color, ax=ax)
+                                         color=color, ax=ax)
 
     def plot_dots(self, sample, color, ax):
-        return self.df[f"{sample}"].plot(figsize=self.figsize, style=['o'], color=color, markersize=4,
-                                    ax=ax, grid=True, legend=True)
-
-    def calc_avg_std_sem(self, sample: Sample):
-        col_names = [col for col in self.df if col.startswith(f"{sample}§")]
-        self.df[f"{sample}"] = self.df[col_names].mean(axis=1)
-        self.df[f"{sample}" + "-STD"] = self.df[col_names].std(axis=1)  # calculate the errors column
-        self.df[f"{sample}" + "-SEM"] = self.df[col_names].sem(axis=1)  # calculate the errors column
+        return self.df[f"{sample}"].plot(figsize=self.figsize, style=['o'], color=color, markersize=4, ax=ax,
+                                         legend=True)
 
     def plot(self):
+        self.ax.clear()
         lines = []
         legends = []
-        ax = None
 
         for sample, color in self.plain_data:
             material, treatment = sample.material, sample.treatment
             self.calc_avg_std_sem(sample)
             self.add_to_dynamic_ranges(sample)
-            ax = self.plot_lines_with_errorbars(sample, error=f"{sample}-STD", color=color, ax=self.ax)
-            self.plot_dots(sample, color=color, ax=ax)
+            self.plot_lines_with_errorbars(sample, error=f"{sample}-STD", color=color, ax=self.ax)
+            self.plot_dots(sample, color=color, ax=self.ax)
             lines.append(Line2D([0], [0], color=color))
             if treatment:
                 legends.append(f"{material} with {treatment}")
@@ -84,7 +81,7 @@ class SpectrumPlot(tk.Toplevel):
                                                     self.df[f"{sample}-SEM"] ** 2 +
                                                     self.df[f"{baseline}-SEM"] ** 2
                                                    ) ** .5
-                ax = self.plot_lines_with_errorbars(f"{sample}-adjusted", error=f"{sample}-gauss-error", color=color)
+                self.plot_lines_with_errorbars(f"{sample}-adjusted", error=f"{sample}-gauss-error", color=color, ax=self.ax)
                 self.plot_dots(f"{sample}-adjusted", color=color, ax=ax)
                 lines.append(Line2D([0], [0], color=color))
                 if treatment:
@@ -103,9 +100,8 @@ class SpectrumPlot(tk.Toplevel):
                     elif dr_type == "af":
                         legends.append(f"{material}, corrected for autofluorescence: {dynamic_range:.2f}")
 
-        ax.set_ylabel("Fluorescence Intensity")
-        ax.legend(lines, legends, markerscale=2)
-        #plt.show()
+        self.ax.set_ylabel("Fluorescence Intensity")
+        self.ax.legend(lines, legends, markerscale=2)
 
     def calc_dynamic_ranges(self):
         dynamic_ranges = {}
@@ -128,7 +124,7 @@ class SpectrumPlot(tk.Toplevel):
             self.ratios[dr_type][material.name] = {}
         if treatment.name in self.ox_treatments:
             treatment_type = "ox"
-        elif treatment.name in self.red_treatmens:
+        elif treatment.name in self.red_treatments:
             treatment_type = "red"
         if treatment_type:
             self.ratios[dr_type][material.name][treatment_type] = self.df[f"{sample}"][405] / self.df[f"{sample}"][488]

@@ -5,8 +5,9 @@ from tkinter import ttk
 from tkinter.colorchooser import askcolor
 import matplotlib as plt
 
-from dende.platereader.analysis.fluorescence_spectrum.plot import SpectrumPlot
+from dende.platereader.analysis.fluorescence_spectrum.plot import FluorescenceSpectrumPlot
 from dende.platereader.layout.tabbed_frame import TabbedFrame
+from dende.platereader.plates.nunc96.well_plate import WellPlate
 
 logger = logging.getLogger(__name__)
 
@@ -15,9 +16,11 @@ class PlotFrame(TabbedFrame):
     plot_vars = {}
     af_vars = {}
 
-    def __init__(self, notebook, settings, well_plate, root):
+    def __init__(self, root: tk.Tk, well_plate: WellPlate):
         self.root = root
-        super().__init__(notebook, settings, "Plot")
+        self.settings = well_plate.settings
+        self.notebook = self.root.nametowidget("bottomrow.notebook")
+        super().__init__(root, self.settings, "Plot")
         self.well_plate = well_plate
         # this are only 10 colors, might be a problem in the future
         self.labels = ["Samples", "Plot", "Autofluorescence?", "Color"]
@@ -95,5 +98,5 @@ class PlotFrame(TabbedFrame):
                     plain_plots.append([sample, color])
 
         plot_data = data.copy()
-        spectrum_plot = SpectrumPlot(self.root, plot_data, plain_plots, autofluorescence_plots, self.settings.control)
+        spectrum_plot = FluorescenceSpectrumPlot(self.root, plot_data, plain_plots, autofluorescence_plots, self.settings.control)
         spectrum_plot.plot()

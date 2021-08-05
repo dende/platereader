@@ -1,7 +1,10 @@
 from typing import Optional
 
 
-class Material:
+class AbstractMaterial:
+
+    name: str
+    control: bool
 
     def __init__(self, name, control=False):
         self.name = name
@@ -19,35 +22,32 @@ class Material:
         return hash(self.__key())
 
     def __eq__(self, other):
-        if isinstance(other, Material):
-            return self.__key() == other.__key()
-        return NotImplemented
+        if not isinstance(other, AbstractMaterial):
+            return NotImplemented
+        return self.__key() == other.__key()
+
+    def __lt__(self, other):
+        if not isinstance(other, AbstractMaterial):
+            return NotImplemented
+        return self.name < other.name
 
 
-class Treatment:
+class Material(AbstractMaterial):
 
     def __init__(self, name, control=False):
-        self.name = name
-        self.control = control
+        super().__init__(name, control)
 
-    def __str__(self):
-        if self.control:
-            return f"*{self.name}*"
-        return self.name
 
-    def __key(self):
-        return self.name, self.control
+class Treatment(AbstractMaterial):
 
-    def __hash__(self):
-        return hash(self.__key())
-
-    def __eq__(self, other):
-        if isinstance(other, Treatment):
-            return self.__key() == other.__key()
-        return NotImplemented
+    def __init__(self, name, control=False):
+        super().__init__(name, control)
 
 
 class Sample:
+
+    material: Material
+    treatment: Treatment
 
     def __init__(self, material: Material, treatment: Optional[Treatment] = None):
         self.material = material
@@ -76,10 +76,11 @@ class Sample:
         return NotImplemented
 
     def __lt__(self, other):
-        if self.material.control and not other.material.control:
-            return True
-        if not self.material.control and other.material.control:
-            return False
+        if self.material == other.material:
+            return self.treatment < other.treatment
+        else:
+            if self.material.control:
+                return False
         return self.__str__() < other.__str__()
 
 

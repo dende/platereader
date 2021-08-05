@@ -1,3 +1,10 @@
-from .protocol_info import open_file  # noqa
+import logging
 
 __version__ = "0.4.3"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
+    datefmt='%H:%M:%S')
+
+logger = logging.getLogger()

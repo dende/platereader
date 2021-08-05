@@ -1,3 +1,5 @@
+from typing import List
+
 from dende.platereader.analysis.sample import Sample, Material, Treatment
 
 
@@ -10,7 +12,8 @@ class Settings:
         self.treatment_control = treatment_control
         self.selected_sample = selected_sample
 
-    def get_samples(self) -> [Sample]:
+    def get_samples(self) -> List[Sample]:
+        # remove emtpy strings from list: https://stackoverflow.com/a/3845453/2899746
         materials = list(filter(None, self.materials))
         treatments = list(filter(None, self.treatments))
 
@@ -24,14 +27,3 @@ class Settings:
             else:
                 samples.append(Sample(material=material))
         return samples
-
-    def has_autofluorescence(self):
-        samples = self.get_samples()
-        othersamples = self.get_samples()
-
-        for sample in samples:
-            for othersample in othersamples:
-                if sample.material.name == othersample.material.name and \
-                   sample.material.control != othersample.material.control:
-                    return True
-        return False

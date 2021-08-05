@@ -2,7 +2,7 @@ from dende.platereader.analysis.luminescence.optic_settings import create_lumine
     create_luminescence_optic_settings_from_txt
 
 
-class LuminescenceSettings():
+class LuminescenceSettings:
 
     def __init__(self, number_of_cycles, cycle_time, measurement_interval_time, scan_mode, scan_diameter, optic_settings):
         self.number_of_cycles = number_of_cycles

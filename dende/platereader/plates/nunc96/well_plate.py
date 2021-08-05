@@ -3,12 +3,11 @@ import re
 import tkinter as tk
 import typing
 from collections import defaultdict
-from functools import partial
 
 import pandas as pd
 import numpy as np
 
-from dende.platereader.analysis.sample import Sample
+from dende.platereader.analysis.sample import Sample, Material, Treatment
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +43,7 @@ class Well:
             try:
                 sample_index = samples.index(sample)
                 color = self.well_plate.colors[sample_index]
-                self.circle = self.draw_circle(fill=color, handler=self.handle_well_click)
+                self.circle = self.draw_circle(fill=color, handler=self.handle_well_click, hover=self.mouseover)
             except ValueError:
                 # we deleted either the corresponding sample or treatment
                 self.well_plate.well_plate.iloc[self.cur_idx, self.cur_col] = True
@@ -59,7 +58,7 @@ class Well:
             self.well_plate.canvas.tag_bind(tags, '<Enter>', hover)
         return circle
 
-    def mouseover(self, event=None):
+    def mouseover(self, event):
         self.well_plate.layout_frame.update_preview(self.well_row, self.well_column)
 
     def handle_well_click(self, event=None):
@@ -92,6 +91,7 @@ class WellPlate:
         self.well_objects = pd.DataFrame(False, index=["A", "B", "C", "D", "E", "F", "G", "H"], columns=range(1, 13))
         self.canvas = None
         self.last = None
+        self.assigned_samples = None
 
         for identifier in self.wells:
             row_id = identifier[0]
@@ -127,7 +127,6 @@ class WellPlate:
                            font="Helvetica 20 bold", text=text)
 
     def draw(self, root):
-        # todo(dende): refactor into smaller parts, cyclomatic complexity is 12
 
         self.canvas = tk.Canvas(root, width=500, height=360)
         self.canvas.pack(side=tk.LEFT)
@@ -167,7 +166,7 @@ class WellPlate:
             self.named_data = named_data
         return self.named_data.copy()
 
-    def get_merged_data(self):
+    def get_merged_data(self) -> pd.DataFrame:
         if self.merged_data is None:
             named_data = self.get_named_data()
 
@@ -180,6 +179,28 @@ class WellPlate:
                     data.rename(columns=lambda x, ls=lens_setting: f"{ls}!{x}", inplace=True)
                     self.merged_data = pd.concat([self.merged_data, data], axis=1)
         return self.merged_data.copy()
+
+    def get_assigned_samples(self):
+        well_mapping = self.get_well_mapping()
+        return list(well_mapping.keys())
+
+    def has_autofluorescence(self):
+        for sample in self.get_assigned_samples():
+            if sample.material.control:
+                for othersample in self.get_assigned_samples():
+                    if sample.material.name != othersample.material.name and not othersample.material.control:
+                        return True
+
+        return False
+
+    def has_control_for_sample(self, sample):
+        samples = self.get_assigned_samples()
+        if sample.material.control:
+            return False
+        control = self.settings.control
+        control_sample = Sample(Material(control, True), sample.treatment)
+
+        return control_sample in samples
 
 
 def create_well_plate(data, proto_info, settings):

@@ -3,19 +3,27 @@ import tkinter as tk
 from functools import partial
 from tkinter import ttk
 
+from dende.platereader.layout import Settings
 from dende.platereader.layout.tabbed_frame import TabbedFrame
 
 logger = logging.getLogger(__name__)
 
 
 class TreatmentsFrame(TabbedFrame):
+    centered_frame: ttk.Frame
 
-    def __init__(self, notebook, settings):
-        super().__init__(notebook, settings, "Treatments")
+    def __init__(self, root: tk.Tk, settings: Settings):
+        super().__init__(root, settings, "Treatments")
         self.treatments = settings.treatments
         self.control = settings.treatment_control
         self.treatment_name_vars = []
         self.control_vars = []  # type: list[tk.BooleanVar]
+
+        self.draw()
+
+    def draw(self):
+        for widget in self.frame.winfo_children():
+            widget.destroy()
 
         self.centered_frame = ttk.Frame(self.frame, width=648)
         self.centered_frame.pack(fill=None, expand=None)

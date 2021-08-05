@@ -7,16 +7,17 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from dende.platereader.layout.tabbed_frame import TabbedFrame
+import dende.platereader.layout.tabbed_frame as tf
 
 logger = logging.getLogger(__name__)
 
 
-class LayoutFrame(TabbedFrame):
+class LayoutFrame(tf.TabbedFrame):
     selected_sample = None
 
-    def __init__(self, notebook, settings, well_plate, continue_function=None):
-        super().__init__(notebook, settings, "Layout")
+    def __init__(self, root: tk.Tk, well_plate, continue_function=None):
+        self.settings = well_plate.settings
+        super().__init__(root, self.settings, "Layout")
         self.frame.grid_columnconfigure(1, weight=1)
         self.well_plate = well_plate
         self.well_plate.set_layout_frame(self)
@@ -27,22 +28,18 @@ class LayoutFrame(TabbedFrame):
         self.fig = None
         self.ax = None
 
-    def update_preview(self, well_row, well_colum):
-        well_identifier = f"{well_row}{well_colum:02}"
-        x = []
-        y = []
+    def update_preview(self, well_row, well_column):
+        well_identifier = f"{well_row}{well_column:02}"
+
+        self.ax.clear()
 
         for data in self.well_plate.data.values():
             col = data[well_identifier]
-            x = x + col.index.tolist()
-            y = y + col.tolist()
+            x = col.index.tolist()
+            y = col.tolist()
+            self.ax.plot(x, y)
 
-        print(x)
-        print(y)
-        self.ax.clear()
-        self.ax.plot(x, y)
-        self.preview.draw() 
-
+        self.preview.draw()
 
     def draw(self):
         for widget in self.frame.winfo_children():
@@ -70,7 +67,6 @@ class LayoutFrame(TabbedFrame):
         self.fig = plt.figure(figsize=(8, 8))
         t = np.arange(0, 3, .01)
         self.ax = self.fig.add_subplot(111)
-        self.ax.plot(t, 2 * np.sin(2 * np.pi * t))
         self.preview = FigureCanvasTkAgg(self.fig, master=self.frame)
         self.preview.get_tk_widget().pack(side=tk.RIGHT, fill='both', expand=1)
 

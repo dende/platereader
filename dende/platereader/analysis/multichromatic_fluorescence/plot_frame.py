@@ -8,31 +8,34 @@ from tkinter.colorchooser import askcolor
 import matplotlib as plt
 import pandas as pd
 
-from dende.platereader.layout.tabbed_frame import TabbedFrame
+import dende.platereader.layout.tabbed_frame as tf
 from dende.platereader.analysis.multichromatic_fluorescence.plot import MultichromaticFluorescencePlot
+from dende.platereader.plates.nunc96.well_plate import WellPlate
 
 logger = logging.getLogger(__name__)
 
 
-class PlotFrame(TabbedFrame):
+class PlotFrame(tf.TabbedFrame):
 
-    def __init__(self, notebook, settings, well_plate, proto_info, listbox):
-        super().__init__(notebook, settings, "Plot")
+    def __init__(self, root: tk.Tk, well_plate: WellPlate):
+        self.root = root
+        self.settings = well_plate.settings
+        self.notebook = self.root.nametowidget("bottomrow.notebook")
+        self.listbox = self.root.nametowidget("toprow.details_list")
+        super().__init__(root, self.settings, "Plot")
         self.well_plate = well_plate
         self.data = self.well_plate.get_named_data()
         colorcycle = cycle(plt.rcParams['axes.prop_cycle'].by_key()['color'])
-        self.multichromatic_fluorescence_settings = proto_info.settings
+        self.multichromatic_fluorescence_settings = self.well_plate.proto_info.settings
 
-        listbox.delete(0, tk.END)
+        self.listbox.delete(0, tk.END)
 
         self.labels = ["Samples"]
         for i, (preset_number, setting) in \
                 enumerate(self.multichromatic_fluorescence_settings.optic_settings.presets.items()):
             self.labels.append(f"Preset {setting.preset_number}")
             self.labels.append("Color")
-            listbox.insert(i, f"Preset {setting.preset_number}: {setting}")
-        if self.settings.has_autofluorescence():
-            self.labels = self.labels + ["Autofluorescence"]
+            self.listbox.insert(i, f"Preset {setting.preset_number}: {setting}")
 
         preset_numbers = list(self.multichromatic_fluorescence_settings.optic_settings.presets.keys())
         k1 = preset_numbers[0]
@@ -42,6 +45,9 @@ class PlotFrame(TabbedFrame):
         self.labels.append("Color")
         self.labels.append(f"Preset {k2}÷{k1}")
         self.labels.append("Color")
+
+        if self.well_plate.has_autofluorescence():
+            self.labels = self.labels + ["Autofluorescence"]
 
         columns = list(self.data.keys()) + ["autofluorescence"] + self.ratios
         self.samples = sorted(self.settings.get_samples())
@@ -68,7 +74,7 @@ class PlotFrame(TabbedFrame):
 
         i = 2
 
-        for k, sample in enumerate(self.samples):
+        for k, sample in enumerate(sorted(self.well_plate.get_assigned_samples())):
 
             label = ttk.Label(plot_config_frame, text=sample.get_description())
             label.grid(row=i, column=0, padx='5', pady='5', sticky='ew')
@@ -87,15 +93,6 @@ class PlotFrame(TabbedFrame):
 
                 j = j + 1
 
-            if self.settings.has_autofluorescence():
-                if self.settings.control and (not sample.material.control):
-                    af_var = tk.Variable()
-                    af_checkbox = tk.Checkbutton(plot_config_frame, variable=af_var)
-                    af_checkbox.deselect()
-                    self.plot_vars.loc[sample, "autofluorescence"] = af_var
-                    af_checkbox.grid(row=i, column=j, padx='5', pady='5', )
-                j = j + 1
-
             for ratio in self.ratios:
                 ratio_var = self.plot_vars.loc[sample, ratio]
                 ratio_checkbox = tk.Checkbutton(plot_config_frame, variable=ratio_var)
@@ -108,6 +105,16 @@ class PlotFrame(TabbedFrame):
                 ratio_color_button.grid(row=i, column=j, padx='5', pady='5', )
                 self.color_buttons.loc[sample, ratio] = ratio_color_button
                 j = j + 1
+
+            if self.well_plate.has_autofluorescence():
+                if self.well_plate.has_control_for_sample(sample):
+                    af_var = tk.Variable()
+                    af_checkbox = tk.Checkbutton(plot_config_frame, variable=af_var)
+                    af_checkbox.deselect()
+                    self.plot_vars.loc[sample, "autofluorescence"] = af_var
+                    af_checkbox.grid(row=i, column=j, padx='5', pady='5', )
+                j = j + 1
+
             i = i + 1
 
         plot_button = ttk.Button(self.frame, text="Plot", command=self.handle_plot_button)
@@ -150,7 +157,7 @@ class PlotFrame(TabbedFrame):
 
         merged_data = self.well_plate.get_merged_data()
 
-        plot = MultichromaticFluorescencePlot(merged_data, self.multichromatic_fluorescence_settings)
+        plot = MultichromaticFluorescencePlot(self.root, merged_data, self.multichromatic_fluorescence_settings)
 
         if ratio_plots["plain"]:
             plot.ratio_plot(ratio_plots["plain"])

@@ -1,14 +1,17 @@
 import logging
 import os
 import re
+from typing import Dict
 
 import pandas as pandas
+import pandas as pd
 
-from dende.platereader.analysis.luminescence.settings import create_luminescence_settings, \
-    create_luminescence_settings_from_txt
-from dende.platereader.analysis.multichromatic_fluorescence.settings import create_multichromatic_flourescence_settings
+import dende.platereader.analysis.fluorescence_spectrum as fs
+import dende.platereader.analysis.multichromatic_fluorescence as mf
+import dende.platereader.analysis.luminescence as lu
+import dende.platereader.analysis.luminescence.settings as lus
+import dende.platereader.analysis.multichromatic_fluorescence.settings as mfs
 from dende.platereader.plates import WELL_PLATE_TYPES
-from dende.platereader.analysis import FLUORESCENCE_SPECTRUM, MULTICHROMATIC_FLUORESCENCE, LUMINESCENCE
 
 logger = logging.getLogger(__name__)
 
@@ -46,12 +49,12 @@ def get_protocol_info_from_txt(datas, proto_info_data):
     # todo(there is no info about the kind of plate given?!)
     microplate_name = WELL_PLATE_TYPES[0]
 
-    if measurement_type == FLUORESCENCE_SPECTRUM:
+    if measurement_type == fs.ANALYSIS_TYPE:
         raise NotImplementedError
-    elif measurement_type == MULTICHROMATIC_FLUORESCENCE:
+    elif measurement_type == mf.ANALYSIS_TYPE:
         raise NotImplementedError
-    elif measurement_type == LUMINESCENCE:
-        settings = create_luminescence_settings_from_txt(datas)
+    elif measurement_type == lu.ANALYSIS_TYPE:
+        settings = lus.create_luminescence_settings_from_txt(datas)
     else:
         raise(Exception(f"Unknown measurement type: {measurement_type}"))
 
@@ -70,12 +73,12 @@ def get_protocol_info(proto_info_sheet):
     measurement_type = proto_info_sheet[1][13]
     microplate_name = proto_info_sheet[1][14]
 
-    if measurement_type == FLUORESCENCE_SPECTRUM:
+    if measurement_type == fs.ANALYSIS_TYPE:
         settings = None
-    elif measurement_type == MULTICHROMATIC_FLUORESCENCE:
-        settings = create_multichromatic_flourescence_settings(proto_info_sheet)
-    elif measurement_type == LUMINESCENCE:
-        settings = create_luminescence_settings(proto_info_sheet)
+    elif measurement_type == mf.ANALYSIS_TYPE:
+        settings = mfs.create_multichromatic_flourescence_settings(proto_info_sheet)
+    elif measurement_type == lu.ANALYSIS_TYPE:
+        settings = lus.create_luminescence_settings(proto_info_sheet)
     else:
         raise(Exception(f"Unknown measurement type: {measurement_type}"))
 
@@ -165,7 +168,7 @@ def get_data_and_proto_info_from_txt(df):
     return datas, proto_info
 
 
-def open_file(path) -> (dict, ProtocolInfo):
+def open_file(path: str) -> (Dict[str, pd.DataFrame], ProtocolInfo):
     filename = os.path.basename(path)
     filename, extension = os.path.splitext(filename)
     logger.info(f"{filename}, {extension}")
