@@ -4,7 +4,6 @@ block_cipher = None
 
 
 a = Analysis(['dende\\platereader\\__main__.py'],
-             pathex=['C:\\Users\\dende\\git\\platereader'],
              binaries=[],
              datas=[('dende/platereader/platereader.ico', '.')],
              hiddenimports=[],
