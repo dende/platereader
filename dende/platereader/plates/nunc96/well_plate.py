@@ -4,10 +4,10 @@ import tkinter as tk
 import typing
 from collections import defaultdict
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
-from dende.platereader.analysis.sample import Sample, Material, Treatment
+from dende.platereader.analysis.sample import Sample, Material
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,8 @@ class Well:
 
     def draw_circle(self, fill=None, handler=None, hover=None):
         tags = f"{self.i}${self.j}"
-        circle = self.well_plate.canvas.create_circle(self.i * 35 + (35 / 2), self.j * 35 + (35 / 2), 15, fill=fill, outline="black", tags=tags)
+        circle = self.well_plate.canvas.create_circle(self.i * 35 + (35 / 2), self.j * 35 + (35 / 2), 15, fill=fill,
+                                                      outline="black", tags=tags)
         if handler:
             self.well_plate.canvas.tag_bind(tags, "<Button-1>", handler)
         if hover:
@@ -67,7 +68,8 @@ class Well:
             self.val = True
         else:
             if self.well_plate.settings.selected_sample:
-                self.well_plate.well_plate.loc[self.well_row, self.well_column] = self.well_plate.settings.selected_sample
+                self.well_plate.well_plate.loc[
+                    self.well_row, self.well_column] = self.well_plate.settings.selected_sample
                 self.val = self.well_plate.settings.selected_sample
 
         self.draw()
@@ -132,7 +134,7 @@ class WellPlate:
         self.canvas.pack(side=tk.LEFT)
 
         well_plate = self.well_plate
-        for i, j in [(i, j) for i in range(len(well_plate.columns)+2) for j in range(len(well_plate.index)+2)]:
+        for i, j in [(i, j) for i in range(len(well_plate.columns) + 2) for j in range(len(well_plate.index) + 2)]:
             cur_col = i - 2
             cur_idx = j - 2
             if i == 0 and j > 1:
@@ -161,7 +163,7 @@ class WellPlate:
                 named_data[content_type].rename(columns=rename_dict, inplace=True)
                 column_names = list(named_data[content_type].columns.values)
                 unused_column_names = [column_name for column_name in column_names if pattern.match(column_name)]
-                named_data[content_type] =\
+                named_data[content_type] = \
                     named_data[content_type][named_data[content_type].columns.difference(unused_column_names)]
             self.named_data = named_data
         return self.named_data.copy()

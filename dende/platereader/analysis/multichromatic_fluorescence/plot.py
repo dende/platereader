@@ -1,7 +1,6 @@
 import logging
 import tkinter as tk
 
-import matplotlib.axes
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
@@ -16,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 class MultichromaticFluorescencePlot(tk.Toplevel, Plot):
 
-    def __init__(self, root: tk.Tk, df: pd.DataFrame, settings: MultichromaticFluorescenceSettings, time_in_minutes=True):
+    def __init__(self, root: tk.Tk, df: pd.DataFrame, settings: MultichromaticFluorescenceSettings,
+                 time_in_minutes=True):
         super().__init__(root)
         self.geometry("1280x720")
         self.df = df
@@ -44,7 +44,7 @@ class MultichromaticFluorescencePlot(tk.Toplevel, Plot):
         legends = []
         lines = []
 
-        for sample, lens_setting, color in configs:  # the variable sample is first WT15, then CytroGFP2Orp1#1 and then SecrroGFP2Orp1#19
+        for sample, lens_setting, color in configs:
             sample_cols = [col for col in self.df if col.startswith(f"{lens_setting}!{sample}§")]
             self.df[f"{sample}"] = self.df[sample_cols].mean(axis=1)  # caluclate the new mean column
             self.df[f"{sample}-STD"] = self.df[sample_cols].std(axis=1)  # calculate the errors column
@@ -80,9 +80,9 @@ class MultichromaticFluorescencePlot(tk.Toplevel, Plot):
             self.df[ls_sample + "-SEM"] = self.df[sample_cols].sem(axis=1)
             self.df[ls_sample + "-adjusted"] = self.df[ls_sample] - self.df[ls_baseline]
             self.df[ls_sample + "-gaussian-error"] = (
-                                                    self.df[ls_sample + "-SEM"] ** 2 +
-                                                    self.df[f"{lens_setting}!{baseline}-SEM"] ** 2
-                                                ) ** 0.5
+                                                             self.df[ls_sample + "-SEM"] ** 2 +
+                                                             self.df[f"{lens_setting}!{baseline}-SEM"] ** 2
+                                                     ) ** 0.5
             self.df[ls_sample + "-adjusted"].plot(figsize=(12, 8),
                                                   yerr=self.df[ls_sample + "-gaussian-error"],
                                                   alpha=0.4,
@@ -90,7 +90,7 @@ class MultichromaticFluorescencePlot(tk.Toplevel, Plot):
             lines.append(Line2D([0], [0], color=color))
             legends.append(f"{sample.get_description()} at {lens_setting}nm, corrected for autofluorescence")
             self.df[ls_sample + "-adjusted"].plot(figsize=(12, 8), style=['o'], color=color, markersize=4,
-                                             ax=self.ax, grid=True, legend=True)
+                                                  ax=self.ax, grid=True, legend=True)
 
         self.ax.set_ylabel("Fluorescence Intensity")
         plt.legend(lines, legends)

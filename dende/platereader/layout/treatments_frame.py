@@ -41,7 +41,8 @@ class TreatmentsFrame(TabbedFrame):
             control_var = tk.BooleanVar()
             control_var.set(False)
             self.control_vars.append(control_var)
-            control_button = ttk.Checkbutton(master=self.centered_frame, text="Control", command=partial(self.toggle_control, i),
+            control_button = ttk.Checkbutton(master=self.centered_frame, text="Control",
+                                             command=partial(self.toggle_control, i),
                                              variable=control_var)
             control_button.grid(row=i, column=2, padx='5', pady='5', )
 

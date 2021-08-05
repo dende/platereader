@@ -1,6 +1,3 @@
-from typing import List
-
-
 def remove_prefix(text, prefix):
     if text.startswith(prefix):
         return text[len(prefix):]
@@ -68,7 +65,6 @@ class OpticPreset:
 class OpticSettings:
 
     def __init__(self, presets, wells_used_for_gain_adjustment, focal_height):
-
         self.presets = presets  # type: dict[int, OpticPreset]
         self.wells_used_for_gain_adjustment = wells_used_for_gain_adjustment
         self.focal_height = focal_height
@@ -95,7 +91,7 @@ def create_multichromatic_fluorescence_optic_settings(proto_info_sheet):
 
     for i, row in optic_settings_subtable.iterrows():
         presets[i] = OpticPreset(row["Presetname"], row["Excitation"], row["Dichroic filter"], row["Emission"],
-                                      row["Gain"], i)
+                                 row["Gain"], i)
 
     wells_used_for_gain_adjustment = proto_info_sheet[1][optic_end + 2]
     focal_height = proto_info_sheet[1][optic_end + 3]

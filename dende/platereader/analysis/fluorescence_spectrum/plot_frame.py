@@ -56,12 +56,13 @@ class PlotFrame(TabbedFrame):
             self.plot_vars[sample] = plot_var
             plot_checkbox.grid(row=i, column=1, padx='5', pady='5', )
 
-            if self.settings.control and (not sample.material.control):
-                af_var = tk.Variable()
-                af_checkbox = tk.Checkbutton(plot_config_frame, variable=af_var)
-                af_checkbox.deselect()
-                self.af_vars[sample] = af_var
-                af_checkbox.grid(row=i, column=2, padx='5', pady='5', )
+            if self.well_plate.has_autofluorescence():
+                if self.well_plate.has_control_for_sample(sample):
+                    af_var = tk.Variable()
+                    af_checkbox = tk.Checkbutton(plot_config_frame, variable=af_var)
+                    af_checkbox.deselect()
+                    self.af_vars[sample] = af_var
+                    af_checkbox.grid(row=i, column=2, padx='5', pady='5', )
 
             color = self.colors[j]
             color_button = tk.Button(plot_config_frame, bg=color, text=None,
@@ -98,5 +99,6 @@ class PlotFrame(TabbedFrame):
                     plain_plots.append([sample, color])
 
         plot_data = data.copy()
-        spectrum_plot = FluorescenceSpectrumPlot(self.root, plot_data, plain_plots, autofluorescence_plots, self.settings.control)
+        spectrum_plot = FluorescenceSpectrumPlot(self.root, plot_data, plain_plots, autofluorescence_plots,
+                                                 self.settings.control)
         spectrum_plot.plot()

@@ -65,7 +65,6 @@ class LayoutFrame(tf.TabbedFrame):
         self.well_plate.draw(self.frame)
 
         self.fig = plt.figure(figsize=(8, 8))
-        t = np.arange(0, 3, .01)
         self.ax = self.fig.add_subplot(111)
         self.preview = FigureCanvasTkAgg(self.fig, master=self.frame)
         self.preview.get_tk_widget().pack(side=tk.RIGHT, fill='both', expand=1)

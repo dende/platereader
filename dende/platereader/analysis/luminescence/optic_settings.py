@@ -16,7 +16,7 @@ class Emission:
         if self.filter:
             return f"{self.wavelength}-{self.bandwidth}"
         else:
-            return f"No filter"
+            return "No filter"
 
 
 class OpticPreset:

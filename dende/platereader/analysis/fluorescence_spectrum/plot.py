@@ -15,8 +15,11 @@ logger = logging.getLogger(__name__)
 
 class FluorescenceSpectrumPlot(tk.Toplevel, Plot):
 
+    legends = List[str]
+    lines = List[Line2D]
 
-    def __init__(self, root: tk.Tk, df: pd.DataFrame, plain_data: List, autofluorescence_data=None, control=None, title=None):
+    def __init__(self, root: tk.Tk, df: pd.DataFrame, plain_data: List, autofluorescence_data=None, control=None,
+                 title=None):
         super().__init__(root)
         self.geometry("1280x720")
         self.df = df
@@ -41,30 +44,41 @@ class FluorescenceSpectrumPlot(tk.Toplevel, Plot):
         self.toolbar.update()
         self.toolbar.pack()
 
-    def plot_lines_with_errorbars(self, sample, error, color, ax=None):
-        return self.df[f"{sample}"].plot(figsize=self.figsize, yerr=self.df[error], alpha=0.4, legend=False,
-                                         color=color, ax=ax)
-
-    def plot_dots(self, sample, color, ax):
-        return self.df[f"{sample}"].plot(figsize=self.figsize, style=['o'], color=color, markersize=4, ax=ax,
-                                         legend=True)
-
     def plot(self):
         self.ax.clear()
-        lines = []
-        legends = []
+        self.lines = []
+        self.legends = []
 
         for sample, color in self.plain_data:
             material, treatment = sample.material, sample.treatment
             self.calc_avg_std_sem(sample)
             self.add_to_dynamic_ranges(sample)
-            self.plot_lines_with_errorbars(sample, error=f"{sample}-STD", color=color, ax=self.ax)
-            self.plot_dots(sample, color=color, ax=self.ax)
-            lines.append(Line2D([0], [0], color=color))
+            self.plot_lines_with_errorbars(sample, error=f"{sample}-STD", color=color)
+            self.plot_dots(sample, color=color)
+            self.lines.append(Line2D([0], [0], color=color))
             if treatment:
-                legends.append(f"{material} with {treatment}")
+                self.legends.append(f"{material} with {treatment}")
             else:
-                legends.append(f"{material}")
+                self.legends.append(f"{material}")
+
+        if self.autofluorescence_data:
+            self.plot_af()
+
+        dynamic_ranges = self.calc_dynamic_ranges()
+
+        if dynamic_ranges:
+            for dr_type, dr_lines in dynamic_ranges.items():
+                for material, dynamic_range in dr_lines.items():
+                    self.lines.append(Line2D([0], [0], linestyle='none', mfc='black', mec='none', marker=r'$\delta$'))
+                    if dr_type == "plain":
+                        self.legends.append(f"{material}: {dynamic_range:.2f}")
+                    elif dr_type == "af":
+                        self.legends.append(f"{material}, corrected for autofluorescence: {dynamic_range:.2f}")
+
+        self.ax.set_ylabel("Fluorescence Intensity")
+        self.ax.legend(self.lines, self.legends, markerscale=2)
+
+    def plot_af(self):
 
         baseline_calculated = False
         if self.autofluorescence_data:
@@ -78,30 +92,16 @@ class FluorescenceSpectrumPlot(tk.Toplevel, Plot):
                 self.df[f"{sample}" + "-adjusted"] = self.df[f"{sample}"] - self.df[f"{baseline}"]
                 self.add_to_dynamic_ranges(sample, af=True)
                 self.df[f"{sample}" + "-gauss-error"] = (
-                                                    self.df[f"{sample}-SEM"] ** 2 +
-                                                    self.df[f"{baseline}-SEM"] ** 2
-                                                   ) ** .5
-                self.plot_lines_with_errorbars(f"{sample}-adjusted", error=f"{sample}-gauss-error", color=color, ax=self.ax)
-                self.plot_dots(f"{sample}-adjusted", color=color, ax=ax)
-                lines.append(Line2D([0], [0], color=color))
+                                                                self.df[f"{sample}-SEM"] ** 2 +
+                                                                self.df[f"{baseline}-SEM"] ** 2
+                                                        ) ** .5
+                self.plot_lines_with_errorbars(f"{sample}-adjusted", error=f"{sample}-gauss-error", color=color)
+                self.plot_dots(f"{sample}-adjusted", color=color)
+                self.lines.append(Line2D([0], [0], color=color))
                 if treatment:
-                    legends.append(f"{material} with {treatment}, corrected for autofluorescence")
+                    self.legends.append(f"{material} with {treatment}, corrected for autofluorescence")
                 else:
-                    legends.append(f"{material}, corrected for autofluorescence")
-
-        dynamic_ranges = self.calc_dynamic_ranges()
-
-        if dynamic_ranges:
-            for dr_type, dr_lines in dynamic_ranges.items():
-                for material, dynamic_range in dr_lines.items():
-                    lines.append(Line2D([0], [0], linestyle='none', mfc='black', mec='none', marker=r'$\delta$'))
-                    if dr_type == "plain":
-                        legends.append(f"{material}: {dynamic_range:.2f}")
-                    elif dr_type == "af":
-                        legends.append(f"{material}, corrected for autofluorescence: {dynamic_range:.2f}")
-
-        self.ax.set_ylabel("Fluorescence Intensity")
-        self.ax.legend(lines, legends, markerscale=2)
+                    self.legends.append(f"{material}, corrected for autofluorescence")
 
     def calc_dynamic_ranges(self):
         dynamic_ranges = {}

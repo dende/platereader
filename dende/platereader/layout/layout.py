@@ -38,7 +38,7 @@ class Layout(ABC):
         self.layout_frame = LayoutFrame(self.root, self.well_plate, continue_function=self.draw_plot_window)
 
         self.notebook.pack(expand=1, fill="both")
-        self.notebook.bind('<<NotebookTabChanged>>',self.tab_change)
+        self.notebook.bind('<<NotebookTabChanged>>', self.tab_change)
 
     def tab_change(self, event):
         tab = None

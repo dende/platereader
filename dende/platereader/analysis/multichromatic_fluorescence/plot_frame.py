@@ -128,7 +128,7 @@ class PlotFrame(tf.TabbedFrame):
         self.colors.loc[sample, column] = hexcolor
         self.color_buttons.loc[sample, column].configure(bg=hexcolor)
 
-    def handle_plot_button(self):
+    def prepare_data(self):
         plain_plots = []
         autofluorescence_plots = []
         ratio_plots = {"plain": [], "af": []}
@@ -156,6 +156,12 @@ class PlotFrame(tf.TabbedFrame):
                         ratio_plots["plain"].append([sample, ratio, color])
 
         merged_data = self.well_plate.get_merged_data()
+
+        return merged_data, ratio_plots, autofluorescence_plots, plain_plots
+
+    def handle_plot_button(self):
+
+        merged_data, ratio_plots, autofluorescence_plots, plain_plots = self.prepare_data()
 
         plot = MultichromaticFluorescencePlot(self.root, merged_data, self.multichromatic_fluorescence_settings)
 
