@@ -1,13 +1,15 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+
 block_cipher = None
 
 
 a = Analysis(['dende\\platereader\\__main__.py'],
              binaries=[],
              datas=[('dende/platereader/platereader.ico', '.')],
-             hiddenimports=[],
+             hiddenimports=['openpyxl', '_openpyxl'],
              hookspath=[],
+             hooksconfig={},
              runtime_hooks=[],
              excludes=[],
              win_no_prefer_redirects=False,
@@ -16,12 +18,12 @@ a = Analysis(['dende\\platereader\\__main__.py'],
              noarchive=False)
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
+
 exe = EXE(pyz,
           a.scripts,
           a.binaries,
           a.zipfiles,
           a.datas,
-          [],
           name='platereader',
           debug=False,
           bootloader_ignore_signals=False,
@@ -29,4 +31,5 @@ exe = EXE(pyz,
           upx=True,
           upx_exclude=[],
           runtime_tmpdir=None,
-          console=False , icon='dende\\platereader\\platereader.ico')
+          console=True,
+          icon='dende\\platereader\\platereader.ico')
