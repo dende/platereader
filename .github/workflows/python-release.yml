@@ -42,7 +42,7 @@ jobs:
               choco install wget unzip
               wget https://github.com/upx/upx/releases/download/v3.96/upx-3.96-win64.zip
               unzip upx-3.96-win64.zip
-            CMD_BUILD: pyinstaller -F -w --add-data "dende/platereader/platereader.ico;." -n platereader -i dende/platereader/platereader.ico --upx-dir=upx-3.96-win64 dende\platereader\__main__.py
+            CMD_BUILD: pyinstaller -F --upx-dir=upx-3.96-win64 dende\platereader\__main__.py
             OUT_FILE_NAME: platereader.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
           - os: macos-latest
