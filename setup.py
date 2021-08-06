@@ -24,7 +24,7 @@ setup(
     version=get_version("dende/platereader/__init__.py"),
     packages=find_namespace_packages(include=['dende.*']),
     install_requires=[
-        'matplotlib==3.2.2',
+        'matplotlib',
         'pandas',
         'numpy',
         'openpyxl',

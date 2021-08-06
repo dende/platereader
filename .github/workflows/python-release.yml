@@ -66,6 +66,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install .[dev]
+        pip install -U https://github.com/pyinstaller/pyinstaller/archive/develop.zip 
     - name: Prepare UPX for ${{matrix.TARGET}}
       run: ${{matrix.CMD_UPX}}
     - name: Build with pyinstaller for ${{matrix.TARGET}}
