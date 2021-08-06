@@ -3,7 +3,6 @@ import tkinter as tk
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.lines import Line2D
 
 from dende.platereader.analysis.multichromatic_fluorescence.settings import MultichromaticFluorescenceSettings
@@ -23,18 +22,7 @@ class MultichromaticFluorescencePlot(tk.Toplevel, Plot):
         self.figsize = (12, 8)
         self.settings = settings
         self.time_in_minutes = time_in_minutes
-
-        self.figure = plt.figure()
-        self.ax = self.figure.subplots()
-
-        self.ax.grid(True)
-
-        self.canvas = FigureCanvasTkAgg(self.figure, self)
-        self.canvas.get_tk_widget().pack(side="top", fill='both', expand=True)
-
-        self.toolbar = NavigationToolbar2Tk(self.canvas, self)
-        self.toolbar.update()
-        self.toolbar.pack()
+        self.setup_figure()
 
     def plot(self, configs):
         if self.time_in_minutes:
@@ -141,6 +129,9 @@ class MultichromaticFluorescencePlot(tk.Toplevel, Plot):
             dividend = self.settings.optic_settings.presets[int(dividend)]
             divisor = self.settings.optic_settings.presets[int(divisor)]
 
+            self.ax.set_ylabel(f"Fluorescence Intensity ratio {{{dividend.excitation.wavelength}}}nm / "
+                               f"{{{divisor.excitation.wavelength}}}nm")
+
             self.calc_avg_std_sem(f"{dividend}!{sample}")
             self.calc_avg_std_sem(f"{divisor}!{sample}")
 
@@ -153,7 +144,7 @@ class MultichromaticFluorescencePlot(tk.Toplevel, Plot):
                                            yerr=self.df[f"{ratio}-ratio-error"], color=color)
             lines.append(Line2D([0], [0], color=color))
 
-            legends.append(f"ratio for {sample.get_description()}:  {dividend.excitation} / {divisor.excitation}")
+            legends.append(f"ratio for {sample.get_description()}")
             self.df[f"{ratio}-ratio"].plot(ax=self.ax, style=['o'], color=color, markersize=4, grid=True, legend=True)
 
-        plt.legend(labels=legends)
+        self.ax.legend(labels=legends)

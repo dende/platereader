@@ -28,7 +28,7 @@ class Layout(ABC):
         self.root = root
         self.frame = root.nametowidget("bottomrow")
         self.notebook = ttk.Notebook(self.frame, name="notebook")
-        self.treatments = ["No Treatment", "H202", "DTT"]
+        self.treatments = ["No Treatment", "H202", "DTT", "", ""]
         self.settings = Settings(treatments=self.treatments, treatment_control=self.treatments[0])
 
         self.well_plate = plates.create_well_plate(data, proto_info, self.settings)

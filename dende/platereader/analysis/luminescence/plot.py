@@ -4,7 +4,6 @@ from typing import List
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.lines import Line2D
 
 from dende.platereader.analysis.luminescence.settings import LuminescenceSettings
@@ -35,17 +34,7 @@ class LuminescencePlot(tk.Toplevel, Plot):
         self.red_treatmens = ["DTT", "DPS"]
         self.ratios = {"plain": {}, "af": {}}
 
-        self.figure = plt.figure()
-        self.ax = self.figure.subplots()
-
-        self.ax.grid(True)
-
-        self.canvas = FigureCanvasTkAgg(self.figure, self)
-        self.canvas.get_tk_widget().pack(side="top", fill='both', expand=True)
-
-        self.toolbar = NavigationToolbar2Tk(self.canvas, self)
-        self.toolbar.update()
-        self.toolbar.pack()
+        self.setup_figure()
 
     def plot(self):
         lines = []
