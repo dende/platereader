@@ -3,11 +3,11 @@ import tkinter as tk
 from functools import partial
 from itertools import cycle
 from tkinter import ttk
-from tkinter.colorchooser import askcolor
+from tkcolorpicker import askcolor
 
-import matplotlib as plt
 import pandas as pd
 
+import dende.platereader.layout
 import dende.platereader.layout.tabbed_frame as tf
 from dende.platereader.analysis.multichromatic_fluorescence.plot import MultichromaticFluorescencePlot
 from dende.platereader.plates.nunc96.well_plate import WellPlate
@@ -25,7 +25,7 @@ class PlotFrame(tf.TabbedFrame):
         super().__init__(root, self.settings, "Plot")
         self.well_plate = well_plate
         self.data = self.well_plate.get_named_data()
-        colorcycle = cycle(plt.rcParams['axes.prop_cycle'].by_key()['color'])
+        self.colorcycle = cycle(dende.platereader.layout.PALETTE)
         self.multichromatic_fluorescence_settings = self.well_plate.proto_info.settings
 
         self.listbox.delete(0, tk.END)
@@ -56,7 +56,7 @@ class PlotFrame(tf.TabbedFrame):
         self.color_buttons = pd.DataFrame(index=self.samples, columns=columns)
 
         for sample in self.samples:
-            self.colors.loc[sample, :] = [next(colorcycle) for _ in range(self.colors.shape[1])]
+            self.colors.loc[sample, :] = [next(self.colorcycle) for _ in range(self.colors.shape[1])]
             for column in columns:
                 self.plot_vars.loc[sample, column] = tk.Variable()
 
@@ -122,7 +122,7 @@ class PlotFrame(tf.TabbedFrame):
 
     def handle_color_button(self, sample, column):
         old_color = self.colors.loc[sample, column]
-        _, hexcolor = askcolor(old_color)
+        _, hexcolor = askcolor(old_color, self.root, palette=dende.platereader.layout.PALETTE)
         if hexcolor is None:
             return
         self.colors.loc[sample, column] = hexcolor

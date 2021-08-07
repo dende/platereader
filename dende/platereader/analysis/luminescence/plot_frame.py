@@ -3,12 +3,12 @@ import tkinter as tk
 from functools import partial
 from itertools import cycle
 from tkinter import ttk
-from tkinter.colorchooser import askcolor
+from tkcolorpicker import askcolor
 
-import matplotlib as plt
 import pandas as pd
 
 import dende.platereader.analysis.luminescence.plot as lup
+import dende.platereader.layout
 import dende.platereader.layout.tabbed_frame as tf
 from dende.platereader.plates.nunc96.well_plate import WellPlate
 
@@ -30,7 +30,7 @@ class PlotFrame(tf.TabbedFrame):
         self.samples = sorted(self.well_mapping.keys())
         self.luminescence_settings = self.well_plate.proto_info.settings
         self.presets = [f"{preset}" for preset in self.luminescence_settings.optic_settings.presets.values()]
-        colorcycle = cycle(plt.rcParams['axes.prop_cycle'].by_key()['color'])
+        self.colorcycle = cycle(dende.platereader.layout.PALETTE)
 
         self.listbox.delete(0, tk.END)
 
@@ -55,7 +55,7 @@ class PlotFrame(tf.TabbedFrame):
         self.time_unit = tk.StringVar(value="Seconds")
 
         for sample in self.samples:
-            self.colors.loc[sample, :] = [next(colorcycle) for _ in range(self.colors.shape[1])]
+            self.colors.loc[sample, :] = [next(self.colorcycle) for _ in range(self.colors.shape[1])]
             for preset in self.presets:
                 self.plot_vars.loc[sample, preset] = tk.Variable()
 
@@ -96,7 +96,7 @@ class PlotFrame(tf.TabbedFrame):
 
     def handle_color_button(self, sample, preset):
         old_color = self.colors.loc[sample, preset]
-        _, hexcolor = askcolor(old_color)
+        _, hexcolor = askcolor(old_color, self.root, palette=dende.platereader.layout.PALETTE)
         self.colors.loc[sample, preset] = hexcolor
         self.color_buttons.loc[sample, preset].configure(bg=hexcolor)
 

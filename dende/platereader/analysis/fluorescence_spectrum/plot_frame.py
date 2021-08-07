@@ -1,10 +1,11 @@
 import logging
 import tkinter as tk
 from functools import partial
+from itertools import cycle
 from tkinter import ttk
-from tkinter.colorchooser import askcolor
-import matplotlib as plt
+from tkcolorpicker import askcolor
 
+import dende.platereader.layout
 from dende.platereader.analysis.fluorescence_spectrum.plot import FluorescenceSpectrumPlot
 from dende.platereader.layout.tabbed_frame import TabbedFrame
 from dende.platereader.plates.nunc96.well_plate import WellPlate
@@ -24,8 +25,8 @@ class PlotFrame(TabbedFrame):
         self.well_plate = well_plate
         # this are only 10 colors, might be a problem in the future
         self.labels = ["Samples", "Plot", "Autofluorescence?", "Color"]
-        stock_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-        self.colors = stock_colors + stock_colors
+        self.colorcycle = cycle(dende.platereader.layout.PALETTE)
+        self.colors = []
         self.color_buttons = []
 
     def draw(self):
@@ -47,6 +48,7 @@ class PlotFrame(TabbedFrame):
         well_mapping = self.well_plate.get_well_mapping()
 
         for j, sample in enumerate(sorted(well_mapping.keys())):
+            self.colors.append(next(self.colorcycle))
             label = ttk.Label(plot_config_frame, text=sample.get_description())
             label.grid(row=i, column=0, padx='5', pady='5', sticky='ew')
 
@@ -76,7 +78,7 @@ class PlotFrame(TabbedFrame):
 
     def handle_color_button(self, i):
         old_color = self.colors[i]
-        _, hexcolor = askcolor(old_color)
+        _, hexcolor = askcolor(old_color, self.root, palette=dende.platereader.layout.PALETTE)
         self.colors[i] = hexcolor
         self.color_buttons[i].configure(bg=hexcolor)
 
