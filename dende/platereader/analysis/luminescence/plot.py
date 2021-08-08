@@ -27,7 +27,6 @@ class LuminescencePlot(tk.Toplevel, Plot):
             self.df.index = minutes_index
 
         self.settings = settings
-        self.figsize = (12, 8)
         self.plain_plots = plain_plots
         self.diff_plots = diff_plots
         self.ox_treatments = ["H202"]

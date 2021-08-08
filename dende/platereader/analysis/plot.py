@@ -19,13 +19,18 @@ class Plot(ABC):
     canvas: FigureCanvasTkAgg
     toolbar: NavigationToolbar2Tk
     figsize: Tuple
+    markersize: int
+    dpi: int
 
     def setup_figure(self):
-        self.figure = plt.figure()
-        self.ax = self.figure.subplots()
-        self.ax.minorticks_on()
+        self.figsize = (6.4, 4.8)
+        self.markersize = 4
+        self.dpi = 200
+        self.figure = plt.figure(figsize=self.figsize, dpi=self.dpi)
 
+        self.ax = self.figure.subplots()
         self.ax.grid(True)
+        self.ax.minorticks_on()
 
         self.canvas = FigureCanvasTkAgg(self.figure, self)
         self.canvas.get_tk_widget().pack(side="top", fill='both', expand=True)
@@ -48,9 +53,7 @@ class Plot(ABC):
             yerr = self.df[error]
         else:
             yerr = None
-        return self.df[f"{sample}"].plot(figsize=self.figsize, yerr=yerr, alpha=0.4, legend=False, grid=True,
-                                         color=color, ax=self.ax)
+        return self.df[f"{sample}"].plot(linewidth=2, yerr=yerr, alpha=0.4, color=color, ax=self.ax)
 
     def plot_dots(self, sample, color):
-        return self.df[f"{sample}"].plot(figsize=self.figsize, style=['o'], color=color, markersize=4, ax=self.ax,
-                                         grid=True, legend=True)
+        return self.df[f"{sample}"].plot(style=['o'], markersize=self.markersize, color=color, ax=self.ax)

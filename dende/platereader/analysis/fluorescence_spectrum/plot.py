@@ -21,7 +21,6 @@ class FluorescenceSpectrumPlot(tk.Toplevel, Plot):
         super().__init__(root)
         self.geometry("1280x720")
         self.df = df
-        self.figsize = (12, 8)
         self.plain_data = plain_data
         self.autofluorescence_data = autofluorescence_data
         self.control = control

@@ -19,7 +19,6 @@ class MultichromaticFluorescencePlot(tk.Toplevel, Plot):
         super().__init__(root)
         self.geometry("1280x720")
         self.df = df
-        self.figsize = (12, 8)
         self.settings = settings
         self.time_in_minutes = time_in_minutes
         self.setup_figure()
