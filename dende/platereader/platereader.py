@@ -8,47 +8,45 @@ from tkinter import ttk
 from tkinter.messagebox import showinfo
 
 import dende.platereader
-import dende.platereader.layout
 import dende.platereader.analysis
-import dende.platereader.protocol_info
 import dende.platereader.analysis.fluorescence_spectrum as fs
-import dende.platereader.analysis.multichromatic_fluorescence as mf
-import dende.platereader.analysis.luminescence as lu
 import dende.platereader.analysis.fluorescence_spectrum.layout as fsl
-import dende.platereader.analysis.multichromatic_fluorescence.layout as mfl
+import dende.platereader.analysis.luminescence as lu
 import dende.platereader.analysis.luminescence.layout as lul
+import dende.platereader.analysis.multichromatic_fluorescence as mf
+import dende.platereader.analysis.multichromatic_fluorescence.layout as mfl
+import dende.platereader.layout
+import dende.platereader.protocol_info
+from dende.platereader.config import Config
 
 logger = logging.getLogger(__name__)
 
 
-class Platereader:
+class Platereader(tk.Tk):
 
     root: tk.Tk
     layout: dende.platereader.layout.Layout
 
-    def mainloop(self):
-        # create the root window
-        self.root = tk.Tk()
-        self.root.title(f"Clariostar analysis v{dende.platereader.__version__}")
-        self.root.resizable(False, False)
-        self.root.geometry('300x150')
+    def __init__(self):
+        super().__init__()
+        self.configs = Config()
+        self.title(f"Clariostar analysis v{dende.platereader.__version__}")
+        self.resizable(False, False)
+        self.geometry('300x150')
         try:
             base_path = sys._MEIPASS
         except Exception:
             base_path = pathlib.Path(__file__).parent.absolute()
 
-        self.root.iconbitmap(os.path.join(base_path, 'platereader.ico'))
+        self.iconbitmap(os.path.join(base_path, 'platereader.ico'))
 
         open_button = ttk.Button(
-            self.root,
+            self,
             text='Open a File',
             command=self.select_file
         )
 
         open_button.pack(expand=True)
-
-        self.root.mainloop()
-        # run the application
 
     def select_file(self):
         filetypes = (
@@ -75,12 +73,12 @@ class Platereader:
             )
             return
 
-        self.root.resizable(True, True)
-        self.root.geometry("1280x684")
-        for widget in self.root.winfo_children():
+        self.resizable(True, True)
+        self.geometry("1280x684")
+        for widget in self.winfo_children():
             widget.destroy()
 
-        toprow = tk.Frame(self.root, height=120, name="toprow")
+        toprow = tk.Frame(self, height=120, name="toprow")
         toprow.pack(side="top", fill="x")
 
         listbox = tk.Listbox(toprow, width=60, name="details_list")
@@ -92,14 +90,14 @@ class Platereader:
 
         listbox.pack()
 
-        bottomrow = ttk.Frame(self.root, name="bottomrow")
+        bottomrow = ttk.Frame(self, name="bottomrow")
         bottomrow.pack(expand=1, fill="both")
 
         if proto_info and proto_info.measurement_type == fs.ANALYSIS_TYPE:
-            self.layout = fsl.FlourescenceSpectrumLayout(self.root, data, proto_info)
+            self.layout = fsl.FlourescenceSpectrumLayout(self, data, proto_info)
 
         elif proto_info and proto_info.measurement_type == mf.ANALYSIS_TYPE:
-            self.layout = mfl.MultichromaticFluorescenceLayout(self.root, data, proto_info)
+            self.layout = mfl.MultichromaticFluorescenceLayout(self, data, proto_info)
 
         elif proto_info and proto_info.measurement_type == lu.ANALYSIS_TYPE:
-            self.layout = lul.LuminescenceLayout(self.root, data, proto_info)
+            self.layout = lul.LuminescenceLayout(self, data, proto_info)

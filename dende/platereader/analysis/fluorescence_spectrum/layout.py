@@ -4,7 +4,7 @@ from typing import Dict
 
 import pandas as pd
 
-import dende.platereader.layout as layout
+import dende.platereader.layout.layout as layout
 import dende.platereader.protocol_info as pi
 import dende.platereader.analysis.fluorescence_spectrum.plot_frame as pf
 

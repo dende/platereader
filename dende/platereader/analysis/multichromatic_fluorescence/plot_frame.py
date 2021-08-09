@@ -127,6 +127,7 @@ class PlotFrame(tf.TabbedFrame):
             return
         self.colors.loc[sample, column] = hexcolor
         self.color_buttons.loc[sample, column].configure(bg=hexcolor)
+        # self.root.configs.save_color_for_sample(sample, hexcolor)
 
     def prepare_data(self):
         plain_plots = []
