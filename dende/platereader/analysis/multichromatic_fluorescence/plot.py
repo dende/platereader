@@ -2,7 +2,6 @@ import logging
 import tkinter as tk
 from functools import partial
 
-import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.lines import Line2D
 
