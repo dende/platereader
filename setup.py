@@ -28,7 +28,9 @@ setup(
         'pandas',
         'numpy',
         'openpyxl',
-        'tkcolorpicker @ https://github.com/dende/tkColorPicker/archive/82659e80ee15fc607c4abd19fc411a9b919e5ad9.zip'
+        'tkcolorpicker @ https://github.com/dende/tkColorPicker/archive/82659e80ee15fc607c4abd19fc411a9b919e5ad9.zip',
+        'appdirs',
+        'pyYAML'
     ],
     extras_require={
         'dev': [
