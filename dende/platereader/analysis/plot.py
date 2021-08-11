@@ -1,4 +1,5 @@
 import logging
+import tkinter as tk
 from abc import ABC
 from typing import Tuple
 
@@ -13,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 class Plot(ABC):
 
+    master: tk.Tk
     df: pd.DataFrame
     figure: Figure
     ax: matplotlib.axes.Axes
@@ -23,6 +25,11 @@ class Plot(ABC):
     dpi: int
 
     def setup_figure(self):
+        if self.master.settings.get_latex_mode():
+            matplotlib.rc("text", usetex=True)
+            matplotlib.rc("font", family="serif")
+            matplotlib.rc("font", serif="Computer Modern Roman")
+
         self.figsize = (6.4, 4.8)
         self.markersize = 4
         self.dpi = 200

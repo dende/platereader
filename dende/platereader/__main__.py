@@ -1,7 +1,4 @@
 import dende.platereader.platereader
-import dende.platereader.analysis
-import dende.platereader.layout
-import dende.platereader.plates
 
 
 def main():
