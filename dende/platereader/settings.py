@@ -3,6 +3,9 @@ import pathlib
 import appdirs
 import yaml
 
+DEFAULT_SETTINGS = {
+    'latex-mode': False
+}
 
 class Settings:
 
@@ -13,13 +16,15 @@ class Settings:
         self.path.mkdir(parents=True, exist_ok=True)
 
         self.file = self.path / "settings.yaml"
-
+        self.settings = DEFAULT_SETTINGS
         if not self.file.is_file():
             open(self.file, 'a').close()
 
         with open(self.file, 'r') as stream:
             try:
-                self.settings = yaml.safe_load(stream)
+                yaml_settings = yaml.safe_load(stream)
+                if yaml_settings:
+                    self.settings.update(yaml_settings)
                 print(self.settings)
             except yaml.YAMLError as exc:
                 print(exc)
