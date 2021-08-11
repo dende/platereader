@@ -17,7 +17,7 @@ import dende.platereader.analysis.multichromatic_fluorescence as mf
 import dende.platereader.analysis.multichromatic_fluorescence.layout as mfl
 import dende.platereader.layout
 import dende.platereader.protocol_info
-from dende.platereader.config import Config
+from dende.platereader.settings import Settings
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class Platereader(tk.Tk):
 
     def __init__(self):
         super().__init__()
-        self.configs = Config()
+        self.settings = Settings()
         self.title(f"Clariostar analysis v{dende.platereader.__version__}")
         self.resizable(False, False)
         self.geometry('300x150')
