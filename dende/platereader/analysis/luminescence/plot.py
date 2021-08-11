@@ -2,7 +2,6 @@ import logging
 import tkinter as tk
 from typing import List
 
-import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.lines import Line2D
 
@@ -70,5 +69,4 @@ class LuminescencePlot(tk.Toplevel, Plot):
                 legends.append(f"{material} corrected with filter")
 
         self.ax.set_ylabel("Luminescence Intensity")
-        plt.legend(lines, legends)
-        plt.show()
+        self.ax.legend(lines, legends)

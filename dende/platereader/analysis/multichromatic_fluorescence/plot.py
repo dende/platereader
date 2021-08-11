@@ -74,18 +74,14 @@ class MultichromaticFluorescencePlot(tk.Toplevel, Plot):
                                                              self.df[ls_sample + "-SEM"] ** 2 +
                                                              self.df[f"{lens_setting}!{baseline}-SEM"] ** 2
                                                      ) ** 0.5
-            self.df[ls_sample + "-adjusted"].plot(figsize=(12, 8),
-                                                  yerr=self.df[ls_sample + "-gaussian-error"],
-                                                  alpha=0.4,
-                                                  legend=False, grid=True, color=color)
             lines.append(Line2D([0], [0], color=color))
             legends.append(f"{sample.get_description()} at {lens_setting}nm, corrected for autofluorescence")
-            self.df[ls_sample + "-adjusted"].plot(figsize=(12, 8), style=['o'], color=color, markersize=4,
-                                                  ax=self.ax, grid=True, legend=True)
+            column = f"{ls_sample}-adjusted"
+            self.plot_lines_with_errorbars(column, error=f"{ls_sample}-gaussian-error", color=color)
+            self.plot_dots(column, color=color)
 
         self.ax.set_ylabel("Fluorescence Intensity")
-        plt.legend(lines, legends)
-        plt.show()
+        self.ax.legend(lines, legends)
 
     def autofluorescence_ratio_plot(self, configs, control):
         raise NotImplementedError()
