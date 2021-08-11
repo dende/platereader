@@ -27,12 +27,16 @@ class Platereader(tk.Tk):
     root: tk.Tk
     layout: dende.platereader.layout.Layout
 
+
+
     def __init__(self):
         super().__init__()
         self.settings = Settings()
         self.title(f"Clariostar analysis v{dende.platereader.__version__}")
         self.resizable(False, False)
         self.geometry('300x150')
+        self.protocol("WM_DELETE_WINDOW", self.cleanup)
+
         try:
             base_path = sys._MEIPASS
         except Exception:
@@ -101,3 +105,8 @@ class Platereader(tk.Tk):
 
         elif proto_info and proto_info.measurement_type == lu.ANALYSIS_TYPE:
             self.layout = lul.LuminescenceLayout(self, data, proto_info)
+
+    def cleanup(self):
+        self.quit()
+        self.destroy()
+        sys.exit()
