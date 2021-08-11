@@ -7,6 +7,7 @@ DEFAULT_SETTINGS = {
     'latex-mode': False
 }
 
+
 class Settings:
 
     def __init__(self):

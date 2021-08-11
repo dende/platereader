@@ -1,6 +1,8 @@
 import logging
 import tkinter as tk
+import tkinter.ttk as ttk
 from abc import ABC
+from functools import partial
 from typing import Tuple
 
 import matplotlib.axes
@@ -42,9 +44,38 @@ class Plot(ABC):
         self.canvas = FigureCanvasTkAgg(self.figure, self)
         self.canvas.get_tk_widget().pack(side="top", fill='both', expand=True)
 
-        self.toolbar = NavigationToolbar2Tk(self.canvas, self)
+        self.bottom_frame = tk.Frame(self)
+        self.bottom_frame.pack(side="bottom", fill='x')
+
+        self.toolbar = NavigationToolbar2Tk(self.canvas, self.bottom_frame)
         self.toolbar.update()
-        self.toolbar.pack()
+        self.toolbar.grid(row=0, column=0)
+
+        self.button_frame = tk.Frame(self.bottom_frame)
+        self.button_frame.grid(row=0, column=1)
+
+        self.small_figure_button = ttk.Button(self.button_frame,
+                                              text="Small Figure",
+                                              command=partial(self.change_figure_size, "small")
+                                              )
+
+        self.big_figure_button = ttk.Button(self.button_frame,
+                                            text="Big Figure",
+                                            command=partial(self.change_figure_size, "big")
+                                            )
+
+        self.big_figure_button.pack(side="left")
+        self.small_figure_button.pack(side="left")
+
+    def change_figure_size(self, size: str = "small"):
+        dpi = None
+        if size == "small":
+            dpi = 300
+        if size == "big":
+            dpi = 200
+
+        self.figure.set_dpi(dpi)
+        self.canvas.draw()
 
     def calc_avg_std_sem(self, sample):
         if sample in self.df:

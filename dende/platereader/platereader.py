@@ -27,8 +27,6 @@ class Platereader(tk.Tk):
     root: tk.Tk
     layout: dende.platereader.layout.Layout
 
-
-
     def __init__(self):
         super().__init__()
         self.settings = Settings()
