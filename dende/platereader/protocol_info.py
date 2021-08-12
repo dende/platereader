@@ -11,7 +11,7 @@ import dende.platereader.analysis.multichromatic_fluorescence as mf
 import dende.platereader.analysis.luminescence as lu
 import dende.platereader.analysis.luminescence.settings as lus
 import dende.platereader.analysis.multichromatic_fluorescence.settings as mfs
-from dende.platereader.plates import WELL_PLATE_TYPES
+import dende.platereader.plates as plates
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class ProtocolInfo:
         self.microplate_name = microplate_name
         self.settings = settings
 
-        if self.microplate_name not in WELL_PLATE_TYPES:
+        if self.microplate_name not in plates.WELL_PLATE_TYPES:
             raise(Exception(f"Unknown measurement type: {self.microplate_name}"))
 
 
@@ -47,7 +47,7 @@ def get_protocol_info_from_txt(datas, proto_info_data):
     analysis_type = proto_info_data[0][3]
     measurement_type = proto_info_data[0][3]
     # todo(there is no info about the kind of plate given?!)
-    microplate_name = WELL_PLATE_TYPES[0]
+    microplate_name = plates.WELL_PLATE_TYPES[0]
 
     if measurement_type == fs.ANALYSIS_TYPE:
         raise NotImplementedError

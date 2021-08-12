@@ -5,8 +5,10 @@ from typing import List
 import pandas as pd
 from matplotlib.lines import Line2D
 
+import dende.platereader.analysis.luminescence.optic_settings as os
 from dende.platereader.analysis.luminescence.settings import LuminescenceSettings
 from dende.platereader.analysis.plot import Plot
+import dende.platereader.analysis.sample as smpl
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +39,7 @@ class LuminescencePlot(tk.Toplevel, Plot):
     def plot(self):
         lines = []
         legends = []
-        for lens_setting, sample, color in self.plain_plots:
+        for lens_setting, sample, color in self.plain_plots:  # type: os.OpticPreset, smpl.Sample, str
             material, treatment = sample.material, sample.treatment
             self.calc_avg_std_sem(f"{lens_setting}!{sample}")
             self.plot_lines_with_errorbars(f"{lens_setting}!{sample}",
@@ -45,9 +47,10 @@ class LuminescencePlot(tk.Toplevel, Plot):
             self.plot_dots(f"{lens_setting}!{sample}", color=color)
             lines.append(Line2D([0], [0], color=color))
             if treatment:
-                legends.append(f"{material} with {treatment} and {lens_setting}")
+                # get lens_settings as objects
+                legends.append(f"{material.name} with {treatment} ({lens_setting.emission.get_description()})")
             else:
-                legends.append(f"{material} with {lens_setting}")
+                legends.append(f"{material.name} ({lens_setting.emission.get_description()})")
 
         for p1, p2, sample, color in self.diff_plots:
             material, treatment = sample.material, sample.treatment
@@ -64,9 +67,9 @@ class LuminescencePlot(tk.Toplevel, Plot):
             self.plot_dots(f"{p1}!{p2}", color=color)
             lines.append(Line2D([0], [0], color=color))
             if treatment:
-                legends.append(f"{material} with {treatment} and corrected with filter")
+                legends.append(f"{material} with {treatment}, corrected")
             else:
-                legends.append(f"{material} corrected with filter")
+                legends.append(f"{material}, corrected")
 
         self.ax.set_ylabel("Luminescence Intensity")
         self.ax.legend(lines, legends)

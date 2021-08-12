@@ -1,5 +1,9 @@
+from typing import Dict
 
-class Emission:
+import dende.platereader.helper as helper
+
+
+class Emission(helper.EqualsMixin):
 
     def __init__(self, emission):
         try:
@@ -12,14 +16,20 @@ class Emission:
             self.wavelength = None
             self.bandwidth = None
 
+    def get_description(self):
+        return self.__str__() + "nm" if self.filter else self.__str__()
+
     def __str__(self):
         if self.filter:
             return f"{self.wavelength}-{self.bandwidth}"
         else:
             return "No filter"
 
+    def __key(self):
+        return self.filter, self.wavelength, self.bandwidth
 
-class OpticPreset:
+
+class OpticPreset(helper.EqualsMixin):
 
     def __init__(self, name, emission, gain, preset_number):
         self.name = name
@@ -30,10 +40,26 @@ class OpticPreset:
     def __str__(self):
         return f"Raw Data ({self.emission} {self.preset_number})"
 
+    def __key(self):
+        return self.name, self.emission, self.gain, self.preset_number
 
-class OpticSettings:
 
-    def __init__(self, presets, wells_used_for_gain_adjustment, focal_height):
+class OpticDiff(helper.EqualsMixin):
+
+    def __init__(self, minuend: OpticPreset, subtrahend: OpticPreset):
+        self.minuend = minuend
+        self.subtrahend = subtrahend
+
+    def __key(self):
+        return self.minuend, self.subtrahend
+
+    def __str__(self):
+        return f"{self.minuend}|{self.subtrahend}"
+
+
+class OpticSettings(helper.EqualsMixin):
+
+    def __init__(self, presets: Dict[int, OpticPreset], wells_used_for_gain_adjustment: int, focal_height):
         self.presets = presets
         self.wells_used_for_gain_adjustment = wells_used_for_gain_adjustment
         self.focal_height = focal_height
@@ -50,17 +76,20 @@ class OpticSettings:
                 return True
         return False
 
-    def get_filter_setting(self):
+    def get_filter_setting(self) -> (int, OpticPreset):
         for key, setting in self.presets.items():
             if setting.emission.filter:
                 return key, setting
         return None
 
-    def get_no_filter_setting(self):
+    def get_no_filter_setting(self) -> (int, OpticPreset):
         for key, setting in self.presets.items():
             if not setting.emission.filter:
                 return key, setting
         return None
+
+    def __key(self):
+        return self.presets, self.wells_used_for_gain_adjustment, self.focal_height
 
 
 def create_luminescence_optic_settings(proto_info_sheet):
@@ -80,7 +109,7 @@ def create_luminescence_optic_settings(proto_info_sheet):
     optic_settings_subtable = optic_settings_subtable.drop(optic_settings_subtable.index[0])
     optic_settings_subtable = optic_settings_subtable.set_index(optic_settings_subtable.columns[0])
 
-    presets = {}  # type:dict[OpticPreset]
+    presets = {}
 
     for i, row in optic_settings_subtable.iterrows():
         presets[i] = OpticPreset(row["Presetname"], row["Emission"], row["Gain"], i)

@@ -31,9 +31,10 @@ class Plot(ABC):
             matplotlib.rc("text", usetex=True)
             matplotlib.rc("font", family="serif")
             matplotlib.rc("font", serif="Computer Modern Roman")
+        matplotlib.rc("figure", autolayout=True)
 
         self.figsize = (6.4, 4.8)
-        self.markersize = 4
+        self.markersize = 2
         self.dpi = 200
         self.figure = plt.figure(figsize=self.figsize, dpi=self.dpi)
 
@@ -71,9 +72,10 @@ class Plot(ABC):
         dpi = None
         if size == "small":
             dpi = 300
+            self.figure.subplots_adjust(left=.13)
         if size == "big":
             dpi = 200
-
+            self.figure.subplots_adjust(left=.125)
         self.figure.set_dpi(dpi)
         self.canvas.draw()
 
@@ -82,6 +84,9 @@ class Plot(ABC):
             logger.warning(f"column {sample} already exists")
             return
         col_names = [col for col in self.df if col.startswith(f"{sample}§")]
+        if not col_names:
+            logger.warning(f"no columns found for {sample}")
+            return
         self.df[f"{sample}"] = self.df[col_names].mean(axis=1)
         self.df[f"{sample}" + "-STD"] = self.df[col_names].std(axis=1)
         self.df[f"{sample}" + "-SEM"] = self.df[col_names].sem(axis=1)
@@ -91,7 +96,7 @@ class Plot(ABC):
             yerr = self.df[error]
         else:
             yerr = None
-        return self.df[f"{sample}"].plot(linewidth=2, yerr=yerr, alpha=0.4, color=color, ax=self.ax)
+        return self.df[f"{sample}"].plot(linewidth=1, yerr=yerr, alpha=0.25, color=color, ax=self.ax)
 
     def plot_dots(self, sample, color):
         return self.df[f"{sample}"].plot(style=['o'], markersize=self.markersize, color=color, ax=self.ax)

@@ -10,6 +10,7 @@ import pandas as pd
 import dende.platereader.layout
 import dende.platereader.layout.tabbed_frame as tf
 from dende.platereader.analysis.multichromatic_fluorescence.plot import MultichromaticFluorescencePlot
+from dende.platereader.analysis.multichromatic_fluorescence.settings import MultichromaticFluorescenceSettings as mfs
 from dende.platereader.plates.nunc96.well_plate import WellPlate
 
 logger = logging.getLogger(__name__)
@@ -26,18 +27,17 @@ class PlotFrame(tf.TabbedFrame):
         self.well_plate = well_plate
         self.data = self.well_plate.get_named_data()
         self.colorcycle = cycle(dende.platereader.layout.PALETTE)
-        self.multichromatic_fluorescence_settings = self.well_plate.proto_info.settings
-
+        self.multichromatic_fluorescence_settings = self.well_plate.proto_info.settings  # type: mfs
+        self.presets = self.multichromatic_fluorescence_settings.optic_settings.presets
         self.listbox.delete(0, tk.END)
 
         self.labels = ["Samples"]
-        for i, (preset_number, setting) in \
-                enumerate(self.multichromatic_fluorescence_settings.optic_settings.presets.items()):
+        for i, (preset_number, setting) in enumerate(self.presets.items()):
             self.labels.append(f"Preset {setting.preset_number}")
             self.labels.append("Color")
             self.listbox.insert(i, f"Preset {setting.preset_number}: {setting}")
 
-        preset_numbers = list(self.multichromatic_fluorescence_settings.optic_settings.presets.keys())
+        preset_numbers = list(self.presets.keys())
         k1 = preset_numbers[0]
         k2 = preset_numbers[1]
         self.ratios = [f"{k1}÷{k2}", f"{k2}÷{k1}"]
@@ -49,7 +49,7 @@ class PlotFrame(tf.TabbedFrame):
         if self.well_plate.has_autofluorescence():
             self.labels = self.labels + ["Autofluorescence"]
 
-        columns = list(self.data.keys()) + ["autofluorescence"] + self.ratios
+        columns = preset_numbers + ["autofluorescence"] + self.ratios
         self.samples = sorted(self.settings.get_samples())
         self.plot_vars = pd.DataFrame(index=self.samples, columns=columns)
         self.colors = pd.DataFrame(index=self.samples, columns=columns)
@@ -79,17 +79,17 @@ class PlotFrame(tf.TabbedFrame):
             label = ttk.Label(plot_config_frame, text=sample.get_description())
             label.grid(row=i, column=0, padx='5', pady='5', sticky='ew')
             j = 1
-            for lens_setting in self.data:
-                plot_var = self.plot_vars.loc[sample, lens_setting]
+            for preset_number in list(self.presets.keys()):
+                plot_var = self.plot_vars.loc[sample, preset_number]
                 plot_checkbox = tk.Checkbutton(plot_config_frame, variable=plot_var)
                 plot_checkbox.grid(row=i, column=j, padx='5', pady='5')
                 plot_checkbox.deselect()
                 j = j + 1
-                color = self.colors.loc[sample, lens_setting]
+                color = self.colors.loc[sample, preset_number]
                 color_button = tk.Button(plot_config_frame, bg=color, text=None,
-                                         command=partial(self.handle_color_button, sample, lens_setting))
+                                         command=partial(self.handle_color_button, sample, preset_number))
                 color_button.grid(row=i, column=j, padx='5', pady='5', )
-                self.color_buttons.loc[sample, lens_setting] = color_button
+                self.color_buttons.loc[sample, preset_number] = color_button
 
                 j = j + 1
 
@@ -140,21 +140,24 @@ class PlotFrame(tf.TabbedFrame):
             if af_var and af_var.get() == "1":
                 autofluorescence = True
 
-            for lens_setting in list(self.data.keys()):
-                color = self.colors.loc[sample, lens_setting]
-                if self.plot_vars.loc[sample, lens_setting].get() == "1":
+            for preset_number, preset in list(self.presets.items()):
+                color = self.colors.loc[sample, preset_number]
+                if self.plot_vars.loc[sample, preset_number].get() == "1":
                     if autofluorescence:
-                        autofluorescence_plots.append([sample, lens_setting, color])
+                        autofluorescence_plots.append([sample, preset, color])
                     else:
-                        plain_plots.append([sample, lens_setting, color])
+                        plain_plots.append([sample, preset, color])
 
             for ratio in self.ratios:
                 color = self.colors.loc[sample, ratio]
                 if self.plot_vars.loc[sample, ratio].get() == "1":
+                    p1, p2 = ratio.split("÷")
+                    p1 = self.presets[int(p1)]
+                    p2 = self.presets[int(p2)]
                     if autofluorescence:
-                        ratio_plots["af"].append([sample, ratio, color])
+                        ratio_plots["af"].append([sample, (p1, p2), color])
                     else:
-                        ratio_plots["plain"].append([sample, ratio, color])
+                        ratio_plots["plain"].append([sample, (p1, p2), color])
 
         merged_data = self.well_plate.get_merged_data()
 

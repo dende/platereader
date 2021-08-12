@@ -7,7 +7,8 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
-from dende.platereader.analysis.sample import Sample, Material
+import dende.platereader.protocol_info as pi
+import dende.platereader.analysis.sample
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +81,7 @@ class WellPlate:
               "#fdd576", "#fbb862", "#f59b56", "#ee7d4f", "#e35e4e", "#d43d51"]
     frame = None  # type: typing.Optional[tk.Frame]
     layout_frame = None
+    proto_info: pi.ProtocolInfo
 
     def __init__(self, data, proto_info, settings):
         self.data = data
@@ -111,7 +113,7 @@ class WellPlate:
         for well_number in self.well_plate.columns:
             for well_letter in self.well_plate.index:
                 sample_name = self.well_plate.loc[well_letter][well_number]
-                if isinstance(sample_name, Sample):
+                if isinstance(sample_name, dende.platereader.analysis.sample.Sample):
                     well_identifier = f"{well_letter}{well_number:02}"
                     well_mapping[sample_name].append(well_identifier)
         return well_mapping
@@ -125,8 +127,7 @@ class WellPlate:
         return sample_list
 
     def write_on_canvas(self, canvas, i, j, text):
-        canvas.create_text(i * 35 + (35 / 2), j * 35 + (35 / 2), fill="black",
-                           font="Helvetica 20 bold", text=text)
+        canvas.create_text(i * 35 + (35 / 2), j * 35 + (35 / 2), fill="black", font="Helvetica 20 bold", text=text)
 
     def draw(self, root):
 
@@ -200,7 +201,9 @@ class WellPlate:
         if sample.material.control:
             return False
         control = self.settings.control
-        control_sample = Sample(Material(control, True), sample.treatment)
+        control_sample = dende.platereader.analysis.sample.Sample(
+            dende.platereader.analysis.sample.Material(control, True),
+            sample.treatment)
 
         return control_sample in samples
 

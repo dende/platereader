@@ -35,6 +35,9 @@ class Excitation:
     def __str__(self):
         return f"F: {self.wavelength}-{self.bandwidth}"
 
+    def get_description(self):
+        return f"{self.wavelength}nm"
+
 
 class Emission:
 
@@ -52,7 +55,7 @@ class OpticPreset:
 
     def __init__(self, name, excitation, dichroic_filter, emission, gain, preset_number):
         self.name = name
-        self.excitation = Excitation(excitation)
+        self.excitation = Excitation(excitation)  # type: Excitation
         self.dichroic_filter = DichroicFilter(dichroic_filter)
         self.emission = Emission(emission)
         self.gain = gain

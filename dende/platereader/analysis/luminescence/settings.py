@@ -1,11 +1,10 @@
-from dende.platereader.analysis.luminescence.optic_settings import create_luminescence_optic_settings, \
-    create_luminescence_optic_settings_from_txt
+import dende.platereader.analysis.luminescence.optic_settings as os
 
 
 class LuminescenceSettings:
 
-    def __init__(self, number_of_cycles, cycle_time, measurement_interval_time, scan_mode, scan_diameter,
-                 optic_settings):
+    def __init__(self, number_of_cycles: int, cycle_time, measurement_interval_time, scan_mode, scan_diameter,
+                 optic_settings: os.OpticSettings):
         self.number_of_cycles = number_of_cycles
         self.cycle_time = cycle_time
         self.measurement_interval_time = measurement_interval_time
@@ -21,13 +20,13 @@ def create_luminescence_settings(proto_info_sheet):
     scan_mode = proto_info_sheet[1][24]
     scan_diameter = proto_info_sheet[1][25]
 
-    optic_settings = create_luminescence_optic_settings(proto_info_sheet)
+    optic_settings = os.create_luminescence_optic_settings(proto_info_sheet)
 
     return LuminescenceSettings(number_of_cycles, cycle_time, measurement_interval_time, scan_mode, scan_diameter,
                                 optic_settings)
 
 
 def create_luminescence_settings_from_txt(df):
-    optic_settings = create_luminescence_optic_settings_from_txt(df)
+    optic_settings = os.create_luminescence_optic_settings_from_txt(df)
 
     return LuminescenceSettings(None, None, None, None, None, optic_settings)

@@ -90,6 +90,7 @@ class FluorescenceSpectrumPlot(tk.Toplevel, Plot):
                     self.legends.append(f"{material}, corrected for autofluorescence")
 
     def calc_dynamic_ranges(self):
+        # todo check this calculation
         dynamic_ranges = {}
         for dr_type, lines in self.ratios.items():
             for line, treatment_types in lines.items():

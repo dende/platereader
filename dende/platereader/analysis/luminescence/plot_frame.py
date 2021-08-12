@@ -3,21 +3,20 @@ import tkinter as tk
 from functools import partial
 from itertools import cycle
 from tkinter import ttk
-from tkcolorpicker import askcolor
 
 import pandas as pd
+from tkcolorpicker import askcolor
 
 import dende.platereader.analysis.luminescence.plot as lup
 import dende.platereader.layout
 import dende.platereader.layout.tabbed_frame as tf
+import dende.platereader.analysis.luminescence.settings as lus
 from dende.platereader.plates.nunc96.well_plate import WellPlate
 
 logger = logging.getLogger(__name__)
 
 
 class PlotFrame(tf.TabbedFrame):
-    filter_settings = {}
-    data = None
 
     def __init__(self, root: tk.Tk, well_plate: WellPlate):
         self.root = root
@@ -28,8 +27,9 @@ class PlotFrame(tf.TabbedFrame):
         self.well_plate = well_plate
         self.well_mapping = self.well_plate.get_well_mapping()
         self.samples = sorted(self.well_mapping.keys())
-        self.luminescence_settings = self.well_plate.proto_info.settings
-        self.presets = [f"{preset}" for preset in self.luminescence_settings.optic_settings.presets.values()]
+        self.luminescence_settings = self.well_plate.proto_info.settings  # type: lus.LuminescenceSettings
+        self.presets = [f"{preset.preset_number}" for preset in
+                        self.luminescence_settings.optic_settings.presets.values()]
         self.colorcycle = cycle(dende.platereader.layout.PALETTE)
 
         self.listbox.delete(0, tk.END)
@@ -46,7 +46,7 @@ class PlotFrame(tf.TabbedFrame):
             no_filter_key, no_filter_setting = self.luminescence_settings.optic_settings.get_no_filter_setting()
             self.labels.append(f"Plot preset {no_filter_key} - preset {filter_key}")
             self.labels.append("Color")
-            self.presets.append(f"{no_filter_setting}|{filter_setting}")
+            self.presets.append(f"{no_filter_key}-{filter_key}")
 
         self.plot_vars = pd.DataFrame(index=self.samples, columns=self.presets)
         self.colors = pd.DataFrame(index=self.samples, columns=self.presets)
@@ -111,9 +111,12 @@ class PlotFrame(tf.TabbedFrame):
                 plot_var = self.plot_vars.loc[sample, preset]
                 if plot_var.get() == "1":
                     try:
-                        p1, p2 = preset.split("|")
+                        p1, p2 = preset.split("-")
+                        p1 = self.luminescence_settings.optic_settings.presets[int(p1)]
+                        p2 = self.luminescence_settings.optic_settings.presets[int(p2)]
                         diff_plots.append([p1, p2, sample, color])
                     except (ValueError, AttributeError):
+                        preset = self.luminescence_settings.optic_settings.presets[int(preset)]
                         plain_plots.append([preset, sample, color])
 
         plot_data = self.well_plate.get_merged_data()
