@@ -32,7 +32,7 @@ class Plot(ABC):
             matplotlib.rc("font", family="serif")
             matplotlib.rc("font", serif="Computer Modern Roman")
         matplotlib.rc("figure", autolayout=True)
-        # matplotlib.rc("axes", grid=True)
+        matplotlib.rc("axes", grid=True)
 
         self.figsize = (6.4, 4.8)
         self.markersize = 2
