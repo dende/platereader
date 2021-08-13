@@ -112,10 +112,13 @@ class PlotFrame(tf.TabbedFrame):
                 if plot_var.get() == "1":
                     try:
                         p1, p2 = preset.split("-")
+                        p1 = int(p1)
+                        p2 = int(p2)
                         p1 = self.luminescence_settings.optic_settings.presets[p1]
                         p2 = self.luminescence_settings.optic_settings.presets[p2]
                         diff_plots.append([p1, p2, sample, color])
                     except (ValueError, AttributeError):
+                        preset = int(preset)
                         preset = self.luminescence_settings.optic_settings.presets[preset]
                         plain_plots.append([preset, sample, color])
 

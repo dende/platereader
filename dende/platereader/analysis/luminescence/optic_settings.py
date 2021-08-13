@@ -17,7 +17,7 @@ class Emission(helper.EqualsMixin):
             self.bandwidth = None
 
     def get_description(self):
-        return self.__str__() + "nm" if self.filter else self.__str__()
+        return f"{self.wavelength}nm" if self.filter else self.__str__()
 
     def __str__(self):
         if self.filter:
@@ -59,7 +59,8 @@ class OpticDiff(helper.EqualsMixin):
 
 class OpticSettings(helper.EqualsMixin):
 
-    def __init__(self, presets: Dict[int, OpticPreset], wells_used_for_gain_adjustment: int, focal_height):
+    def __init__(self, presets: Dict[int, OpticPreset], wells_used_for_gain_adjustment: int = None,
+                 focal_height: int = None):
         self.presets = presets
         self.wells_used_for_gain_adjustment = wells_used_for_gain_adjustment
         self.focal_height = focal_height
@@ -141,6 +142,6 @@ def create_luminescence_optic_settings_from_txt(data):
         parts = description.split(" ")
         preset_num = parts.pop()
         emission = " ".join(parts)
-        presets[preset_num] = OpticPreset(None, emission, None, preset_num)
+        presets[int(preset_num)] = OpticPreset(None, emission, None, preset_num)
 
     return OpticSettings(presets, None, None)
