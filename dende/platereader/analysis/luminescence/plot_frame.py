@@ -116,7 +116,7 @@ class PlotFrame(tf.TabbedFrame):
                         p2 = self.luminescence_settings.optic_settings.presets[int(p2)]
                         diff_plots.append([p1, p2, sample, color])
                     except (ValueError, AttributeError):
-                        preset = self.luminescence_settings.optic_settings.presets[int(preset)]
+                        preset = self.luminescence_settings.optic_settings.presets[preset]
                         plain_plots.append([preset, sample, color])
 
         plot_data = self.well_plate.get_merged_data()
