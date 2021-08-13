@@ -67,9 +67,9 @@ class LuminescencePlot(tk.Toplevel, Plot):
             self.plot_dots(f"{p1}!{p2}", color=color)
             lines.append(Line2D([0], [0], color=color))
             if treatment:
-                legends.append(f"{material} with {treatment}, corrected")
+                legends.append(f"{material.name} with {treatment}, corrected")
             else:
-                legends.append(f"{material}, corrected")
+                legends.append(f"{material.name}, corrected")
 
         self.ax.set_ylabel("Luminescence Intensity")
         self.ax.legend(lines, legends)
