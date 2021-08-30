@@ -71,7 +71,7 @@ class Platereader(tk.Tk):
         except Exception as e:
             showinfo(
                 title='Error',
-                message=str(e)
+                message=f"{type(e)}: {e}"
             )
             return
 

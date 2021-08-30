@@ -30,8 +30,8 @@ class LuminescencePlot(tk.Toplevel, Plot):
         self.settings = settings
         self.plain_plots = plain_plots
         self.diff_plots = diff_plots
-        self.ox_treatments = ["H202"]
-        self.red_treatmens = ["DTT", "DPS"]
+        self.ox_treatments = ["H202", "DPS"]
+        self.red_treatmens = ["DTT"]
         self.ratios = {"plain": {}, "af": {}}
 
         self.setup_figure()

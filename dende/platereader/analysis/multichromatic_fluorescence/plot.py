@@ -24,8 +24,8 @@ class MultichromaticFluorescencePlot(tk.Toplevel, Plot):
         self.time_in_minutes = time_in_minutes
         self.setup_figure()
 
-        self.ox_treatments = [Treatment("H202")]
-        self.red_treatments = [Treatment("DTT"), Treatment("DPS")]
+        self.ox_treatments = [Treatment("H202"), Treatment("DPS")]
+        self.red_treatments = [Treatment("DTT")]
 
         self.dynamic_ranges = []
 
@@ -167,6 +167,7 @@ class MultichromaticFluorescencePlot(tk.Toplevel, Plot):
         self.canvas.mpl_connect('button_press_event', partial(self.onclick, configs, lines, legends))
 
     def onclick(self, configs, lines, legends, event):
+        # todo calculate dynamic range when there is more than two lines
         xdata = event.xdata
         if len(configs) != 2:
             logger.info("can only calculate dynamic range for 2 samples")

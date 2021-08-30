@@ -25,8 +25,8 @@ class FluorescenceSpectrumPlot(tk.Toplevel, Plot):
         self.autofluorescence_data = autofluorescence_data
         self.control = control
         self.title = title
-        self.ox_treatments = ["H202"]
-        self.red_treatments = ["DTT", "DPS"]
+        self.ox_treatments = ["H202", "DPS"]
+        self.red_treatments = ["DTT"]
         self.ratios = {"plain": {}, "af": {}}
         self.setup_figure()
 

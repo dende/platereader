@@ -7,6 +7,7 @@ import pandas as pandas
 import pandas as pd
 
 import dende.platereader.analysis.fluorescence_spectrum as fs
+import dende.platereader.analysis.fluorescence_spectrum.settings as fss
 import dende.platereader.analysis.multichromatic_fluorescence as mf
 import dende.platereader.analysis.luminescence as lu
 import dende.platereader.analysis.luminescence.settings as lus
@@ -50,7 +51,7 @@ def get_protocol_info_from_txt(datas, proto_info_data):
     microplate_name = plates.WELL_PLATE_TYPES[0]
 
     if measurement_type == fs.ANALYSIS_TYPE:
-        raise NotImplementedError
+        settings = None # we dont need it?
     elif measurement_type == mf.ANALYSIS_TYPE:
         raise NotImplementedError
     elif measurement_type == lu.ANALYSIS_TYPE:
